@@ -5,10 +5,25 @@ var pointArray = new Array();
 pointArray.push(new Point(0,20));
 pointArray.push(new Point(0,0));
 
+function debugDraw()
+{
+	var context = document.getElementById("canvas").getContext('2d');
+	context.clearRect(0,0,context.canvas.width,context.canvas.height);
+	for(var indexStr in pointArray)
+	{
+		index = parseInt(indexStr);
+		if(index == 0)
+			context.moveTo(pointArray[index].x,pointArray[index].y);
+		else
+			context.moveTo(pointArray[index].x,pointArray[index].y);
+	}
+}
+
 function update(deltaTime)
 {
 	forwardDistance = updateHead(deltaTime);
 	updateTail(deltaTime,forwardDistance);
+	debugDraw();
 }
 
 //Head
