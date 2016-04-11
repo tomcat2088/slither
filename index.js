@@ -1,5 +1,5 @@
-var direction = new Point(2,2);
-var speed = 10;
+var direction = (new Point(2,2)).normalize();
+var speed = 50;
 
 var pointArray = new Array();
 pointArray.push(new Point(150,50));
@@ -14,7 +14,7 @@ function debugDraw()
 	context.fillStyle = "#fff";
 	context.fillRect(0,0,context.canvas.width,context.canvas.height);
 	context.beginPath();
-	context.lineWidth = 3;
+	context.lineWidth = 10;
 	context.strokeStyle = "#330022";
 	for(var indexStr in pointArray)
 	{
@@ -25,10 +25,28 @@ function debugDraw()
 			context.lineTo(pointArray[index].x,pointArray[index].y);
 	}
 	context.stroke();
+	context.lineWidth = 0.5;
+	context.strokeStyle = "#330022";
+	context.strokeText(""+debugLen(),10,10);
+}
+
+function debugLen()
+{
+	var totalLen = 0;
+	for(var indexStr in pointArray)
+	{
+		index = parseInt(indexStr);
+		if(index >= pointArray.length-1)
+			break;
+		totalLen+=pointArray[index+1].sub(pointArray[index]).len();
+	}
+	return (totalLen);
 }
 
 window.addEventListener('mousemove',function(e){
-	direction = new Point(e.clientX - 400,e.clientY - 300);
+	//if(pointArray[pointArray.length - 1].sub(pointArray[pointArray.length - 2]).len() < 5)
+//		return;
+	direction = new Point(e.clientX - head().x,e.clientY - head().y);
 	direction = direction.normalize();
 });
 
@@ -36,7 +54,8 @@ window.addEventListener("keydown",function(e){
 	switch(e.keyCode)
 	{
 		case 38:
-			direction.y = -1; 
+			//direction.y = -1; 
+			totalLen +=15;
 			break;
 		case 40:
 			direction.y = 1;
@@ -52,7 +71,26 @@ window.addEventListener("keydown",function(e){
 
 window.onload = function()
 {
-	setInterval(function(){update(0.2);},100);
+	var fps = 30;
+	var now;
+	var then = Date.now();
+	var interval = 1000/fps;
+	var delta;
+ 
+	function draw() {
+	
+		requestAnimationFrame(draw);
+	
+		now = Date.now();
+		delta = now - then;
+	
+		if (delta > interval) {
+			then = now - (delta % interval);
+			update(delta/1000);
+		}
+	}
+
+	draw();
 }
 
 function update(deltaTime)
@@ -67,7 +105,7 @@ function updateHead(deltaTime)
 {
 	var newPoint = head();
 	newPoint = newPoint.add(direction.mul(speed * deltaTime));
-	var forwardDistance = direction.mul(speed * deltaTime).len();
+	var forwardDistance = speed * deltaTime;
 	var len = pointArray.length;
 	var oldVec = pointArray[len - 1].sub(pointArray[len - 2]).normalize();
 	if(direction.normalize().equal(oldVec))
@@ -91,25 +129,22 @@ function head()
 function updateTail(deltaTime,forwardDistance)
 {
 	var trackedLen = 0;
-	for(var indexStr in pointArray)
+	for(var index=pointArray.length-1;index >= 1;index--)
 	{
-		index = parseInt(indexStr);
-		if(index + 1 >= pointArray.length)
-			break;
-		var segmentLen = pointArray[index+1].sub(pointArray[index]).len();
+		var segmentLen = pointArray[index].sub(pointArray[index-1]).len();
 		trackedLen+=segmentLen;
-		if(trackedLen >= forwardDistance)
+		if(trackedLen >= totalLen)
 		{
 			//track finish
-			var forwardOnThisSeg =  forwardDistance - (trackedLen - segmentLen);
+			var forwardOnThisSeg =  trackedLen - totalLen;
 			var overLen = forwardOnThisSeg;
-			var vec = pointArray[index+1].sub(pointArray[index]).normalize();
-			pointArray[index] = pointArray[index].add(vec.mul(overLen));
+			var vec = pointArray[index].sub(pointArray[index-1]).normalize();
+			pointArray[index-1] = pointArray[index-1].add(vec.mul(overLen));
+			for(var j=0;j<index-1;j++)
+			{
+				pointArray.shift();
+			}
 			return;
-		}
-		else
-		{
-			pointArray.shift();
 		}
 	}
 }
