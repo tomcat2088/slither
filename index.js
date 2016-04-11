@@ -1,22 +1,58 @@
-var direction = new Point(0,1);
+var direction = new Point(2,2);
 var speed = 10;
 
 var pointArray = new Array();
-pointArray.push(new Point(0,20));
-pointArray.push(new Point(0,0));
+pointArray.push(new Point(150,50));
+pointArray.push(new Point(150,100));
+//pointArray.push(new Point(150,150));
+
+var totalLen = 50;
 
 function debugDraw()
 {
 	var context = document.getElementById("canvas").getContext('2d');
-	context.clearRect(0,0,context.canvas.width,context.canvas.height);
+	context.fillStyle = "#fff";
+	context.fillRect(0,0,context.canvas.width,context.canvas.height);
+	context.beginPath();
+	context.lineWidth = 3;
+	context.strokeStyle = "#330022";
 	for(var indexStr in pointArray)
 	{
 		index = parseInt(indexStr);
 		if(index == 0)
 			context.moveTo(pointArray[index].x,pointArray[index].y);
 		else
-			context.moveTo(pointArray[index].x,pointArray[index].y);
+			context.lineTo(pointArray[index].x,pointArray[index].y);
 	}
+	context.stroke();
+}
+
+window.addEventListener('mousemove',function(e){
+	direction = new Point(e.clientX - 400,e.clientY - 300);
+	direction = direction.normalize();
+});
+
+window.addEventListener("keydown",function(e){
+	switch(e.keyCode)
+	{
+		case 38:
+			direction.y = -1; 
+			break;
+		case 40:
+			direction.y = 1;
+		break;
+		case 37:
+		direction.x = -1;
+		break;
+		case 39:
+		direction.x = 1;
+		break;
+	}
+});
+
+window.onload = function()
+{
+	setInterval(function(){update(0.2);},100);
 }
 
 function update(deltaTime)
@@ -32,8 +68,9 @@ function updateHead(deltaTime)
 	var newPoint = head();
 	newPoint = newPoint.add(direction.mul(speed * deltaTime));
 	var forwardDistance = direction.mul(speed * deltaTime).len();
-	var oldVec = pointArray[0].sub(pointArray[1]).normalize();
-	if(direction.equal(oldVec))
+	var len = pointArray.length;
+	var oldVec = pointArray[len - 1].sub(pointArray[len - 2]).normalize();
+	if(direction.normalize().equal(oldVec))
 	{
 		head().x = newPoint.x;
 		head().y = newPoint.y;
@@ -57,6 +94,8 @@ function updateTail(deltaTime,forwardDistance)
 	for(var indexStr in pointArray)
 	{
 		index = parseInt(indexStr);
+		if(index + 1 >= pointArray.length)
+			break;
 		var segmentLen = pointArray[index+1].sub(pointArray[index]).len();
 		trackedLen+=segmentLen;
 		if(trackedLen >= forwardDistance)
