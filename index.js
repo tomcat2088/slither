@@ -7,42 +7,60 @@ pointArray.push(new Point(150,100));
 //pointArray.push(new Point(150,150));
 
 var totalLen = 50;
+var usersState;
 
-
-function debugDrawUsers(users)
+function debugDrawUsers()
 {
+	if(usersState)
+	{
+		users = usersState;
 	var context = document.getElementById("canvas").getContext('2d');
 	context.fillStyle = "#fff";
 	context.fillRect(0,0,context.canvas.width,context.canvas.height);
 	for(var uid in users)
 	{
 		context.fillStyle = "#000";
-		context.fillRect(users[uid].x,users[uid].y,5,5);
+		context.fillRect(users[uid].data[0].x,users[uid].data[0].y,5,5);
+		context.strokeText(""+users[uid].nickname,users[uid].data[0].x,users[uid].data[0].y - 5);
+	}
 	}
 }
 
-setSocketUpdateCallBack(debugDrawUsers);
+setSocketUpdateCallBack(setUsers);
+
+function setUsers(users)
+{
+	usersState = users;
+}
 
 function debugDraw()
 {
-	var context = document.getElementById("canvas").getContext('2d');
-	context.fillStyle = "#fff";
-	context.fillRect(0,0,context.canvas.width,context.canvas.height);
-	context.beginPath();
-	context.lineWidth = 10;
-	context.strokeStyle = "#330022";
-	for(var indexStr in pointArray)
+	if(usersState)
 	{
-		index = parseInt(indexStr);
-		if(index == 0)
-			context.moveTo(pointArray[index].x,pointArray[index].y);
-		else
-			context.lineTo(pointArray[index].x,pointArray[index].y);
+		var context = document.getElementById("canvas").getContext('2d');
+		context.fillStyle = "#fff";
+		context.fillRect(0,0,context.canvas.width,context.canvas.height);
+		context.beginPath();
+		context.lineWidth = 1;
+		context.strokeStyle = "#330022";
+		for(var key in usersState)
+		{
+			pointArr = usersState[key].data;
+			for(var indexStr in pointArr)
+			{
+				index = parseInt(indexStr);
+				if(index == 0)
+					context.moveTo(pointArr[index].x,pointArr[index].y);
+				else
+					context.lineTo(pointArr[index].x,pointArr[index].y);
+			}
+			context.stroke();
+
+			firstPt = usersState[key].data[usersState[key].data.length - 1];
+			context.strokeText(""+usersState[key].nickname,firstPt.x,firstPt.y - 5);
+		}
 	}
-	context.stroke();
-	context.lineWidth = 0.5;
-	context.strokeStyle = "#330022";
-	context.strokeText(""+debugLen(),10,10);
+	
 }
 
 function debugLen()
@@ -59,34 +77,12 @@ function debugLen()
 }
 
 // window.addEventListener('mousemove',function(e){
-// 	//if(pointArray[pointArray.length - 1].sub(pointArray[pointArray.length - 2]).len() < 5)
-// //		return;
 // 	direction = new Point(e.clientX - head().x,e.clientY - head().y);
 // 	direction = direction.normalize();
 // });
 
-window.addEventListener("keydown",function(e){
-	switch(e.keyCode)
-	{
-		case 38:
-			//direction.y = -1; 
-			totalLen +=15;
-			break;
-		case 40:
-			direction.y = 1;
-		break;
-		case 37:
-		direction.x = -1;
-		break;
-		case 39:
-		direction.x = 1;
-		break;
-	}
-});
-
 window.onload = function()
 {
-	return;
 	var fps = 30;
 	var now;
 	var then = Date.now();
@@ -113,7 +109,13 @@ function update(deltaTime)
 {
 	forwardDistance = updateHead(deltaTime);
 	updateTail(deltaTime,forwardDistance);
+	sendCommand(Command_Sync,pointArray);
 	debugDraw();
+
+	if(head().x < 0 || head().x > 800)
+		direction.x = -direction.x;
+	if(head().y < 0 || head().y > 600)
+		direction.y = -direction.y;
 }
 
 //Head
