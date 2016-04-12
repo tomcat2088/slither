@@ -13,7 +13,7 @@ function setSocketUpdateCallBack(cb)
 	callback = cb;
 }
 
-var websocket = new WebSocket("ws://192.168.2.1:8765");
+var websocket = new WebSocket("ws://localhost:8765");
 websocket.onopen = function(e)
 {
 	console.log("Connect success!!! Begin login...");
@@ -58,7 +58,7 @@ websocket.onmessage = function(e)
 
 function login()
 {
-	sendCommand(Command_Login);
+	sendCommand(Command_Login,{'nickname':'ocean'});
 }
 
 function loginSuccess()
