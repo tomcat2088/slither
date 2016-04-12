@@ -8,6 +8,21 @@ pointArray.push(new Point(150,100));
 
 var totalLen = 50;
 
+
+function debugDrawUsers(users)
+{
+	var context = document.getElementById("canvas").getContext('2d');
+	context.fillStyle = "#fff";
+	context.fillRect(0,0,context.canvas.width,context.canvas.height);
+	for(var uid in users)
+	{
+		context.fillStyle = "#000";
+		context.fillRect(users[uid].x,users[uid].y,5,5);
+	}
+}
+
+setSocketUpdateCallBack(debugDrawUsers);
+
 function debugDraw()
 {
 	var context = document.getElementById("canvas").getContext('2d');
@@ -43,12 +58,12 @@ function debugLen()
 	return (totalLen);
 }
 
-window.addEventListener('mousemove',function(e){
-	//if(pointArray[pointArray.length - 1].sub(pointArray[pointArray.length - 2]).len() < 5)
-//		return;
-	direction = new Point(e.clientX - head().x,e.clientY - head().y);
-	direction = direction.normalize();
-});
+// window.addEventListener('mousemove',function(e){
+// 	//if(pointArray[pointArray.length - 1].sub(pointArray[pointArray.length - 2]).len() < 5)
+// //		return;
+// 	direction = new Point(e.clientX - head().x,e.clientY - head().y);
+// 	direction = direction.normalize();
+// });
 
 window.addEventListener("keydown",function(e){
 	switch(e.keyCode)
@@ -71,6 +86,7 @@ window.addEventListener("keydown",function(e){
 
 window.onload = function()
 {
+	return;
 	var fps = 30;
 	var now;
 	var then = Date.now();
