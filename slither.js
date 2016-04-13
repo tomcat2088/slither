@@ -1,9 +1,9 @@
 function Slither()
 {
 	var self = this;
-	self.length = 50;
+	self.length = 150;
 	self.width = Math.random() * 10;
-	self.points = [new Point(100,100),new Point(100,90)];
+	self.points = [new Point(0,-50),new Point(0,0)];
 	self.color = '#c32000';
 
 	self.speed = 80;
@@ -33,12 +33,38 @@ function Slither()
 		forwardDistance = updateHead(deltaTime);
 		updateTail(deltaTime,forwardDistance);
 
+		if(head().x < -400)
+		{
+			move(800,0);
+		}
+		if(head().x > 400)
+		{
+			move(-800,0);
+		}
+		if(head().y < -300)
+		{
+			move(0,600);
+		}
+		if(head().y > 300)
+		{
+			move(0,-600);
+		}
+
 		// if(head().x < 0 || head().x > 800)
 		// 	self.direction.x = -self.direction.x;
 		// if(head().y < 0 || head().y > 600)
 		// 	self.direction.y = -self.direction.y;
 
-		self.length += 10 * deltaTime;
+		//self.length += 10 * deltaTime;
+	}
+
+	function move(offsetX,offsetY)
+	{
+		for(var index in self.points)
+		{
+			self.points[index].x += offsetX;
+			self.points[index].y += offsetY;
+		}
 	}
 
 	//Head

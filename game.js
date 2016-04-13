@@ -3,12 +3,11 @@ function Game()
 	var self = this;
 	var loginUser = null;
 
-	var slither; //self
-	var otherSlithers = new Object();//other player's slithers
+	self.slither = new Slither(); //self
+	self.otherSlithers = new Object();//other player's slithers
 
-	var slitherMap;
+	self.slitherMap = new Array();
 	this.server = new Server("",function(command,obj){
-		console.log(command + ":" + JSON.stringify(obj));
 		if(command == Server_Command_Login)
 		{
 			loginUser = obj.data;
@@ -16,33 +15,31 @@ function Game()
 		}
 		else if(command == Server_Command_Sync)
 		{
-			otherSlithers[obj.uid] = obj.data;
-			console.log(otherSlithers);
+			self.otherSlithers[obj.uid] = obj.data;
 		}
 		else if(command == Server_Command_Map)
 		{
-			slitherMap = obj.data;
-			drawMap();
+			self.slitherMap = obj.data;
 		}
 		else if(command == Server_Command_CatchProp)
 		{
-			delete slitherMap[obj.data.uid];
-			drawMap();
+			delete self.slitherMap[obj.data.uid];
+		}
+		else if(command == Server_Command_Logout)
+		{
+			delete self.otherSlithers[obj.uid];
 		}
 	});
 	this.server.login("ocean");
 
-
-	function drawMap()
+	this.update = function(deltaTime)
 	{
-		var context = document.getElementById("canvas").getContext('2d');
-		context.fillStyle = "#fff";
-		context.fillRect(0,0,context.canvas.width,context.canvas.height);
-		for(var key in slitherMap)
-		{
-			var point = slitherMap[key];
-			context.fillStyle = "#300";
-			context.fillRect(point.x,point.y,5,5);
-		}
+		self.slither.update(deltaTime);
+		self.server.sync(self.slither.serialize());
+
+		var lastPt = self.slither.points[self.slither.points.length - 1];
+		//debugDraw.drawSlithers({"main":slither},new Point(400 - lastPt.x,300 - lastPt.y));
+		debugDraw.drawSlithers(self.otherSlithers,new Point(400 - lastPt.x,300 - lastPt.y));
+		debugDraw.drawMap(self.slitherMap,new Point(400 - lastPt.x,300 - lastPt.y));
 	}
 }
