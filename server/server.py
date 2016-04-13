@@ -4,15 +4,19 @@ import asyncio
 import websockets
 import json
 import uuid
+import slithermap
 
 users = {};
 slithers = {};
 sockets = {}
+slither_map = slithermap.gen_slither_map(0,0,800,600,5)
 
 Command_Login = 10000
 Command_Sync = 10001
 Command_Message = 10002
 Command_Logout = 10003
+Command_Map = 10004
+Command_CatchProp = 10005
 
 #struct
 def User(uid,nickname):
@@ -41,6 +45,15 @@ async def sync(uid,data):
 	for key in sockets:
 		await sockets[key].send(json.dumps(ret))
 
+async def send_map(uid):
+	ret = result(0,Command_Map,uid,slither_map)
+	await sockets[uid].send(json.dumps(ret))
+
+async def catch_prop(uid,prop_uid):
+	if prop_uid in slither_map.keys():
+		ret = result(0,Command_CatchProp,uid,slither_map[prop_uid])
+		await sockets[uid].send(json.dumps(ret))
+		del slither_map[prop_uid]
 
 async def logout(uid):
 	ret = result(0,Command_Logout,uid,'')
@@ -87,6 +100,10 @@ async def accept_connection(websocket, path):
 		command = int(obj['command'])
 		if command == Command_Sync:
 			await sync(obj['uid'],obj['data'])
+		elif command == Command_Map:
+			await send_map(obj['uid'])
+		elif command == Command_CatchProp:
+			await catch_prop(obj['uid'],obj['data'])
 
 start_server = websockets.serve(accept_connection, 'localhost', 8765)
 

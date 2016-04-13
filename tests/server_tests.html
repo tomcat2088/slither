@@ -1,0 +1,29 @@
+<html>
+<head>
+	<script type="text/javascript" src="../server.js"></script>
+	<script type="text/javascript">
+		var map;
+		var server = new Server("",function(command,obj){
+			console.log(command + ":" + JSON.stringify(obj));
+			if(command == Server_Command_Login)
+			{
+				server.loadMap();
+			}
+			else if(command == Server_Command_Map)
+			{
+				map = obj.data;
+				for(var key in map)
+				{
+					server.catchProp(key);
+				}
+			}
+			else if(command == Server_Command_CatchProp)
+			{
+				delete map[obj.data.uid];
+			}
+		});
+		server.login("ocean");
+		
+	</script>
+</head>
+</html>

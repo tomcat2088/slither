@@ -35,4 +35,12 @@ function Point(x,y)
 			return true;
 		return false;
 	}
+
+	self.normal = function()
+	{
+		var normalizePt = self.normalize();
+		var y = normalizePt.x / Math.sqrt(1 + normalizePt.y * normalizePt.y);
+		var x = - normalizePt.y * y / normalizePt.x;
+		return new Point(x,y);
+	}
 }
