@@ -40,7 +40,7 @@ function Point(x,y)
 	{
 		var normalizePt = self.normalize();
 		var y = normalizePt.x / Math.sqrt(1 + normalizePt.y * normalizePt.y);
-		var x = - normalizePt.y * y / normalizePt.x;
+		var x = Math.sqrt(1 - y * y);
 		return new Point(x,y);
 	}
 }

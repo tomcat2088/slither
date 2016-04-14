@@ -7,76 +7,125 @@
 		</style>
 	</head>
 	<body>
+	<script id="vertexShader" type="text/plain">
+		varying vec2 v_uv;
+		void main() {
+			gl_Position = vec4( position, 1.0 );
+			v_uv = uv;
+		}
+	</script>
+	<script id="fragmentShader" type="text/plain">
+		uniform sampler2D texture0;
+		varying vec2 v_uv;
+		void main() {
+			gl_FragColor = texture2D(texture0, v_uv);
+		}
+	</script>
 		<script src="../math.js"></script>
+		<script src="//rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>>
 		<script src="http://threejs.org/build/three.min.js"></script>
 		<script>
+				var stats = new Stats();
+stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom );
+
 			var scene = new THREE.Scene();
 			var width =  window.innerWidth;
 			var height = window.innerHeight;
 			var camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000 );
+			var texture_G;
 
 			var renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
+
 			document.body.appendChild( renderer.domElement );
-
-			
-			var material = new THREE.LineBasicMaterial({
-				color: 0x0000ff
-			});
-
-			var geometry = new THREE.Geometry();
-			geometry.vertices.push(
-				new THREE.Vector3( -10, 0, 0 ),
-				new THREE.Vector3( 0, 10, 0 ),
-				new THREE.Vector3( 10, 0, 0 )
-			);
-
-			var line = new THREE.Line( geometry, material );
-			scene.add( line );
-
-			var rectGeom = new THREE.ShapeGeometry( rectShape ); var rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshBasicMaterial( { color: 0xff0000 } ) ) ; scene.add( rectMesh );
-
 
 			camera.position.z = 5;
 
-			var offset = 0;
+			var planeGeometry = new THREE.PlaneGeometry( 2000,2000);
+			var material = new THREE.MeshBasicMaterial( { color: 0xdddddd } );
+			var ground = new THREE.Mesh( planeGeometry,material );
+			scene.add(ground);
 
+			var offset = 0;
+			var circles_all = null;
 			var render = function () {
 				requestAnimationFrame( render );
 
-				// var geometry = new THREE.Geometry();
-				// geometry.vertices.push(
-				// 	new THREE.Vector3( -10 + offset, 0, 0 ),
-				// 	new THREE.Vector3( 0, 10 + offset, 0 ),
-				// 	new THREE.Vector3( 10 + offset, 0, 0 )
-				// );
-				// line.geometry = geometry;
-				// offset += 0.1;
+    stats.begin();
 
+				if(circles_all)
+				{
+					for(var circle in circles_all)
+					{
+						circles_all[circle].position.x += 1;
+					}
+				}
+				else
+				{
+					//material = new THREE.MeshBasicMaterial( { color: 0xdd3333 } );
+					var circles = circleGeometryFromLine([new Point(offset,0),new Point(50,200),new Point(-20,400)],texture_G);
+					for(var circle in circles)
+					{
+						scene.add( circles[circle]);
+						circles_all = circles;
+					}
+				}
+
+    // monitored code goes here
+
+    stats.end();
 				renderer.render(scene, camera);
 			};
 
-			render();
+			// instantiate a loader
+			var loader = new THREE.TextureLoader();
 
-			function shapeFromLine(pts)
-			{
-				var rectShape = new THREE.Shape();
-				var radius = 5;
-				var currentVec;
-				for(var i=0;i<pts.length;i++)
-				{
-					if(i < pts.length - 1)
-					{
-						currentVec = pts[i + 1].sub(pts[i]).normalize().normal();
-						var leftPt = pts[i].add(currentVec.mul(radius));
-						var rightPt = pts[i].sub(currentVec.mul(radius));
-					}
-					 // rectShape.moveTo( 0,0 ); 
-					 // rectShape.lineTo( 0, rectWidth ); 
-					 // rectShape.lineTo( rectLength, rectWidth ); 
-					 // rectShape.lineTo( rectLength, 0 ); 
-					 // rectShape.lineTo( 0, 0 ); 
+			// load a resource
+			loader.load(
+				// resource URL
+				'circle_mask.png',
+				// Function when resource is loaded
+				function ( texture ) {
+					texture_G = texture;
+					render();
+				},
+				// Function called when download progresses
+				function ( xhr ) {
+					console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+				},
+				// Function called when download errors
+				function ( xhr ) {
+					console.log( 'An error happened' );
 				}
+			);
+
+			function circleGeometryFromLine(pts,texture)
+			{
+				var circleGeometrys = new Array();
+				var rectShape = new THREE.Shape();
+				var radius = 15;
+				var color = 0x508E52;
+				for(var index = 0;index < pts.length - 1;index++)
+				{
+					var lineVec = pts[index + 1].sub(pts[index]).normalize();
+					var len = pts[index + 1].sub(pts[index]).len();
+					for(var offset = 0;offset < len;offset += radius)
+					{
+						var newPt = pts[index].add(lineVec.mul(offset));
+
+						var radius = 15;
+						var segments = 32;
+						color += 4;
+						var material = new THREE.MeshBasicMaterial({color:color,alphaMap:texture,transparent: true});
+						var circleGeometry = new THREE.PlaneGeometry( radius * 2, radius * 2 );
+						var circle = new THREE.Mesh( circleGeometry, material );
+						circleGeometrys.push(circle);
+						circle.position.x = newPt.x;
+						circle.position.y = newPt.y;
+					}
+				}
+				return circleGeometrys;
 			}
 		</script>
 	</body>
