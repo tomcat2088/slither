@@ -1,22 +1,76 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-// window.onload = function()
-// {
-// 	window.game = new Game();
-// 	window.gameRender = new GameRender(document.body,{width:400,height:400});
+var Slither = require("./slither.js");
+var Server = require("./server.js");
+module.exports = function Game()
+{
+	var self = this;
+	var loginUser = null;
 
-// 	window.gameRender.registerRender(new SlitherRender(game.slither));
-// }
+	self.slither = new Slither(); //self
+	self.otherSlithers = new Object();//other player's slithers
 
-// window.addEventListener('mousemove',function(e){
-// 	direction = new Point(e.clientX - 400,e.clientY - 300);
-// 	direction = direction.normalize();
-// 	game.slither.direction = direction;
-// });
+	self.slitherMap = new Array();
+	this.server = new Server("",function(command,obj){
+		if(command == Server_Command_Login)
+		{
+			loginUser = obj.data;
+			self.server.loadMap();
+		}
+		else if(command == self.server.ServerServer_Command_Sync)
+		{
+			self.otherSlithers[obj.uid] = obj.data;
+		}
+		else if(command == self.server.Server_Command_Map)
+		{
+			self.slitherMap = obj.data;
+		}
+		else if(command == self.server.Server_Command_CatchProp)
+		{
+			delete self.slitherMap[obj.data.uid];
+		}
+		else if(command == self.server.Server_Command_Logout)
+		{
+			delete self.otherSlithers[obj.uid];
+		}
+	});
+	this.server.login("ocean");
 
-var slither = require("./slither.js");
-var slither_o = slither();
-console.log(slither_o);
-},{"./slither.js":3}],2:[function(require,module,exports){
+	this.update = function(deltaTime)
+	{
+		deltaTime /= 1000;
+
+		self.slither.update(deltaTime);
+		//self.server.sync(self.slither.serialize());
+
+		var lastPt = self.slither.points[self.slither.points.length - 1];
+
+		for(var prop in self.slitherMap)
+		{
+
+		}
+	};
+}
+},{"./server.js":6,"./slither.js":7}],2:[function(require,module,exports){
+var Game = require("./game.js");
+var Point = require("./math.js");
+var GameRender = require("./render/game_render.js");
+var SlitherRender = require("./render/slither_render.js");
+window.onload = function()
+{
+	window.game = new Game();
+	window.gameRender = new GameRender(document.body,{width:400,height:400},function(deltaTime){
+		window.game.update(deltaTime);
+	});
+
+	window.gameRender.registerRender(new SlitherRender(game.slither));
+}
+
+window.addEventListener('mousemove',function(e){
+	direction = new Point(e.clientX - window.innerWidth/2, - e.clientY + window.innerHeight/2);
+	direction = direction.normalize();
+	game.slither.direction = direction;
+});
+},{"./game.js":1,"./math.js":3,"./render/game_render.js":4,"./render/slither_render.js":5}],3:[function(require,module,exports){
 module.exports = function Point(x,y)
 {
 	var self = this;
@@ -63,8 +117,243 @@ module.exports = function Point(x,y)
 		return new Point(x,y);
 	}
 }
-},{}],3:[function(require,module,exports){
-Point = require("./math.js");
+},{}],4:[function(require,module,exports){
+module.exports = function GameRender(container, size,updateCallBack) {
+	var scene = new THREE.Scene();
+	var width = window.innerWidth;
+	var height = window.innerHeight;
+	var camera = new THREE.OrthographicCamera(width / -2, width / 2, height / 2, height / -2, 1, 1000);
+
+	var renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+
+	if (container)
+		container.appendChild(renderer.domElement);
+	else
+		document.body.appendChild(renderer.domElement);
+
+	camera.position.z = 999;
+
+	var material = new THREE.MeshBasicMaterial({
+		color: 0xdddddd
+	});
+	var ground = new THREE.Mesh(new THREE.PlaneGeometry(size.width, size.height), material);
+	scene.add(ground);
+
+	var self = this;
+	this.scene = scene;
+	this.registeredRenders = new Array();
+	this.registerRender = function(render)
+	{
+		self.registeredRenders.push(render);
+	}
+
+	var lastDate = new Date();
+	var render = function () {
+		requestAnimationFrame( render );
+		
+		var now = new Date();
+		var delta = (now - lastDate);
+		lastDate = now;
+		for(var key in self.registeredRenders)
+		{
+			self.registeredRenders[key].update(delta,self);
+		}
+		if(updateCallBack)
+			updateCallBack(delta)
+		renderer.render(scene, camera);
+	};
+	render();
+}
+
+},{}],5:[function(require,module,exports){
+module.exports = function SlitherRender(slither)
+{
+	var self = this;
+	this.slither = slither;
+	this.meshes = new Array();
+	this.update = function(deltaTime,gameRender)
+	{
+		//if(this.cacheMeshes.length == 0)
+		//{
+			this.init(gameRender);
+		//}
+		// self.node.position.x = self.slither.points[0].x;
+		// self.node.position.y = self.slither.points[0].y;
+	}
+
+	this.init = function(gameRender)
+	{
+		if(self.meshes.length == 0)
+		{
+			var count = this.slither.length / (this.slither.width / 2);
+			for(var i = 0;i < count;i++)
+			{
+				var material = new THREE.MeshBasicMaterial({color:0x330000,alphaMap:undefined,transparent: true});
+				var circleGeometry = new THREE.PlaneGeometry( self.slither.width,self.slither.width );
+				mesh = new THREE.Mesh( circleGeometry, material );
+				gameRender.scene.add(mesh);
+				self.meshes.push(mesh);
+			}
+		}
+		circleGeometryFromLine(self.slither.points,0,gameRender.scene);
+	}
+
+	function circleGeometryFromLine(pts,texture,scene)
+	{
+		var radius = self.slither.width / 2;
+		for(var index = 0;index < self.meshes.length;index++)
+		{
+			var distance = radius * index;
+			var pt = pointOnLineForDistance(pts,distance);
+			self.meshes[index].position.x = pt.x;
+			self.meshes[index].position.y = pt.y;
+		}
+	}
+
+	function pointOnLineForDistance(pts,distance)
+	{
+		var currentDistance = 0;
+		for(var index = 0;index < pts.length - 1;index++)
+		{
+			var lineVec = pts[index + 1].sub(pts[index]).normalize();
+			var len = pts[index + 1].sub(pts[index]).len();
+			if(currentDistance + len >= distance)
+			{
+				var pt = pts[index].add(lineVec.mul(distance - currentDistance));
+				return pt;
+			}
+			currentDistance += len;
+		}
+		return pts[pts.length - 1];
+	}
+}
+},{}],6:[function(require,module,exports){
+module.exports = function Server(serverUrl,commandCallBack)
+{
+	var self = this;
+
+	self.Server_Command_Login = 10000;
+	self.Server_Command_Sync = 10001;
+	self.Server_Command_Message = 10002;
+	self.Server_Command_Logout = 10003;
+	self.Server_Command_Map = 10004;
+	self.Server_Command_CatchProp = 10005;
+
+	self.commandCallBack = commandCallBack;
+
+	self.avaliable = false;
+	self.loginUser = null;
+
+	var websocket;
+	this.login = function(nickname)
+	{
+		if(websocket)
+			return;
+		websocket = new WebSocket("ws://localhost:8765");//serverUrl
+		websocket.onopen = function(e)
+		{
+			console.log("Connect success!!! Begin login...");
+			sendCommand(Server_Command_Login,{'nickname':nickname});
+		}
+		websocket.onmessage = function(e)
+		{
+			var obj = JSON.parse(e.data);
+			processResponse(obj);
+		}
+	}
+
+	this.sync = function(data)
+	{
+		sendCommand(Server_Command_Sync,data);	
+	}
+
+	this.loadMap = function()
+	{
+		sendCommand(Server_Command_Map,"");	
+	}
+
+	this.catchProp = function(uid)
+	{
+		sendCommand(Server_Command_CatchProp,uid);	
+	}
+
+	//process response
+	function loginResponse(obj)
+	{
+		console.log("Login Success > " + obj.data.uid);
+		self.loginUser = obj.data;
+		if(self.commandCallBack)
+		{
+			self.commandCallBack(Server_Command_Login,obj);
+		}
+	}
+
+	function syncResponse(obj)
+	{
+		if(self.commandCallBack)
+		{
+			self.commandCallBack(Server_Command_Sync,obj);
+		}
+	}
+
+	function logoutResponse(obj)
+	{
+		if(self.commandCallBack)
+		{
+			self.commandCallBack(Server_Command_Logout,obj);
+		}
+	}
+
+	function responseProcessMap()
+	{
+		return {10000:loginResponse,
+				10001:syncResponse,
+				10003:logoutResponse};
+	}
+
+	function processResponse(obj)
+	{
+		if(obj.code != 0)
+		{
+			console.log("error:" + obj.data);
+			return;
+		}
+		else
+		{
+			var func = responseProcessMap()[obj.command];
+			if(func)
+			{
+				func(obj);
+			}
+			else
+			{
+				if(self.commandCallBack)
+				{
+					self.commandCallBack(obj.command,obj);
+				}
+			}
+		}
+	}
+
+	function sendCommand(command,data)
+	{
+		if(websocket == null)
+			return;
+		var result = new Object();
+		if(command != Server_Command_Login)
+			if(self.loginUser)
+				result.uid = self.loginUser.uid;
+			else
+				return
+		result.command = command;
+		result.data = data;
+		websocket.send(JSON.stringify(result));
+	}
+}
+
+},{}],7:[function(require,module,exports){
+var Point = require("./math.js");
 
 module.exports = function Slither()
 {
@@ -185,4 +474,4 @@ module.exports = function Slither()
 	}
 
 }
-},{"./math.js":2}]},{},[1]);
+},{"./math.js":3}]},{},[2]);

@@ -6,7 +6,10 @@ class HttpServer(object):
 
     @cherrypy.expose
     def index(self):
-        return "Hello world!"
+        with open("../app/index.html", 'r') as file:
+            js_str = file.read()
+            data = bytes(js_str, 'utf-8')
+        return data
 
     @cherrypy.expose
     def bundlejs(self):
@@ -20,7 +23,7 @@ class HttpServer(object):
 if __name__ == '__main__':
     conf = {
         '/': {
-            'tools.staticdir.root': os.path.abspath(os.getcwd())
+            'tools.staticdir.root': os.path.abspath(os.getcwd()+"/../app")
         },
         '/bundlejs': {
             'tools.response_headers.on': True,
@@ -28,11 +31,11 @@ if __name__ == '__main__':
         },
         '/static': {
             'tools.staticdir.on': True,
-            'tools.staticdir.dir': './static'
+            'tools.staticdir.dir': './build'
         },
         '/tests': {
             'tools.staticdir.on': True,
-            'tools.staticdir.dir': './static/tests/'
+            'tools.staticdir.dir': './tests'
         }
     }
     cherrypy.quickstart(HttpServer(), '/', conf)

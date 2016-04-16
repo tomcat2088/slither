@@ -1,4 +1,4 @@
-Point = require("./math.js");
+var Point = require("./math.js");
 
 module.exports = function Slither()
 {

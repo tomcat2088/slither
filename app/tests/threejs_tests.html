@@ -21,13 +21,12 @@
 			gl_FragColor = texture2D(texture0, v_uv);
 		}
 	</script>
-		<script src="../math.js"></script>
 		<script src="//rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>>
 		<script src="http://threejs.org/build/three.min.js"></script>
 		<script>
-				var stats = new Stats();
-stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-document.body.appendChild( stats.dom );
+			var stats = new Stats();
+			stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+			document.body.appendChild( stats.dom );
 
 			var scene = new THREE.Scene();
 			var width =  window.innerWidth;
@@ -42,7 +41,22 @@ document.body.appendChild( stats.dom );
 
 			camera.position.z = 5;
 
-			var planeGeometry = new THREE.PlaneGeometry( 2000,2000);
+			var rectShape = new THREE.Shape();
+			rectShape.moveTo( 0,0 );
+			rectShape.lineTo( 0, 10 );
+			rectShape.lineTo( 10, 10 );
+			rectShape.lineTo( 10, 0 );
+			rectShape.lineTo( 0, 0 );
+
+			var rectShape2 = new THREE.Shape();
+			rectShape2.moveTo( 20,20 );
+			rectShape2.lineTo( 20, 30 );
+			rectShape2.lineTo( 30, 30 );
+			rectShape2.lineTo( 30, 20 );
+			rectShape2.lineTo( 20, 20 );
+
+			var planeGeometry = new THREE.ShapeGeometry(rectShape);
+			planeGeometry.addShape(rectShape2);
 			var material = new THREE.MeshBasicMaterial( { color: 0xdddddd } );
 			var ground = new THREE.Mesh( planeGeometry,material );
 			scene.add(ground);
@@ -54,25 +68,7 @@ document.body.appendChild( stats.dom );
 
     stats.begin();
 
-				if(circles_all)
-				{
-					for(var circle in circles_all)
-					{
-						circles_all[circle].position.x += 1;
-					}
-				}
-				else
-				{
-					//material = new THREE.MeshBasicMaterial( { color: 0xdd3333 } );
-					var circles = circleGeometryFromLine([new Point(offset,0),new Point(50,200),new Point(-20,400)],texture_G);
-					for(var circle in circles)
-					{
-						scene.add( circles[circle]);
-						circles_all = circles;
-					}
-				}
-
-    // monitored code goes here
+    			planeGeometry.
 
     stats.end();
 				renderer.render(scene, camera);
@@ -99,34 +95,6 @@ document.body.appendChild( stats.dom );
 					console.log( 'An error happened' );
 				}
 			);
-
-			function circleGeometryFromLine(pts,texture)
-			{
-				var circleGeometrys = new Array();
-				var rectShape = new THREE.Shape();
-				var radius = 15;
-				var color = 0x508E52;
-				for(var index = 0;index < pts.length - 1;index++)
-				{
-					var lineVec = pts[index + 1].sub(pts[index]).normalize();
-					var len = pts[index + 1].sub(pts[index]).len();
-					for(var offset = 0;offset < len;offset += radius)
-					{
-						var newPt = pts[index].add(lineVec.mul(offset));
-
-						var radius = 15;
-						var segments = 32;
-						color += 4;
-						var material = new THREE.MeshBasicMaterial({color:color,alphaMap:texture,transparent: true});
-						var circleGeometry = new THREE.PlaneGeometry( radius * 2, radius * 2 );
-						var circle = new THREE.Mesh( circleGeometry, material );
-						circleGeometrys.push(circle);
-						circle.position.x = newPt.x;
-						circle.position.y = newPt.y;
-					}
-				}
-				return circleGeometrys;
-			}
 		</script>
 	</body>
 </html>

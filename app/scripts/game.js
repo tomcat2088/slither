@@ -1,4 +1,6 @@
-function Game()
+var Slither = require("./slither.js");
+var Server = require("./server.js");
+module.exports = function Game()
 {
 	var self = this;
 	var loginUser = null;
@@ -13,33 +15,37 @@ function Game()
 			loginUser = obj.data;
 			self.server.loadMap();
 		}
-		else if(command == Server_Command_Sync)
+		else if(command == self.server.ServerServer_Command_Sync)
 		{
 			self.otherSlithers[obj.uid] = obj.data;
 		}
-		else if(command == Server_Command_Map)
+		else if(command == self.server.Server_Command_Map)
 		{
 			self.slitherMap = obj.data;
 		}
-		else if(command == Server_Command_CatchProp)
+		else if(command == self.server.Server_Command_CatchProp)
 		{
 			delete self.slitherMap[obj.data.uid];
 		}
-		else if(command == Server_Command_Logout)
+		else if(command == self.server.Server_Command_Logout)
 		{
 			delete self.otherSlithers[obj.uid];
 		}
 	});
 	this.server.login("ocean");
 
-	// this.update = function(deltaTime)
-	// {
-	// 	self.slither.update(deltaTime);
-	// 	self.server.sync(self.slither.serialize());
+	this.update = function(deltaTime)
+	{
+		deltaTime /= 1000;
 
-	// 	var lastPt = self.slither.points[self.slither.points.length - 1];
-	// 	//debugDraw.drawSlithers({"main":slither},new Point(400 - lastPt.x,300 - lastPt.y));
-	// 	debugDraw.drawSlithers(self.otherSlithers,new Point(400 - lastPt.x,300 - lastPt.y));
-	// 	debugDraw.drawMap(self.slitherMap,new Point(400 - lastPt.x,300 - lastPt.y));
-	// }
+		self.slither.update(deltaTime);
+		//self.server.sync(self.slither.serialize());
+
+		var lastPt = self.slither.points[self.slither.points.length - 1];
+
+		for(var prop in self.slitherMap)
+		{
+
+		}
+	};
 }

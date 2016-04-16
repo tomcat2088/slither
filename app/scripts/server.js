@@ -1,14 +1,13 @@
-var Server_Command_Login = 10000;
-var Server_Command_Sync = 10001;
-var Server_Command_Message = 10002;
-var Server_Command_Logout = 10003;
-var Server_Command_Map = 10004;
-var Server_Command_CatchProp = 10005;
-
-
-function Server(serverUrl,commandCallBack)
+module.exports = function Server(serverUrl,commandCallBack)
 {
 	var self = this;
+
+	self.Server_Command_Login = 10000;
+	self.Server_Command_Sync = 10001;
+	self.Server_Command_Message = 10002;
+	self.Server_Command_Logout = 10003;
+	self.Server_Command_Map = 10004;
+	self.Server_Command_CatchProp = 10005;
 
 	self.commandCallBack = commandCallBack;
 

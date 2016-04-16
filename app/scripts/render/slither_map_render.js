@@ -1,4 +1,4 @@
-function SlitherMapRender(map)
+module.exports = function SlitherMapRender(map)
 {
 	var self = this;
 	this.slither = slither;

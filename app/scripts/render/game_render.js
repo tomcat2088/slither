@@ -1,4 +1,4 @@
-function GameRender(container, size) {
+module.exports = function GameRender(container, size,updateCallBack) {
 	var scene = new THREE.Scene();
 	var width = window.innerWidth;
 	var height = window.innerHeight;
@@ -31,6 +31,7 @@ function GameRender(container, size) {
 	var lastDate = new Date();
 	var render = function () {
 		requestAnimationFrame( render );
+		
 		var now = new Date();
 		var delta = (now - lastDate);
 		lastDate = now;
@@ -38,6 +39,8 @@ function GameRender(container, size) {
 		{
 			self.registeredRenders[key].update(delta,self);
 		}
+		if(updateCallBack)
+			updateCallBack(delta)
 		renderer.render(scene, camera);
 	};
 	render();
