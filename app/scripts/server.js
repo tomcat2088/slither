@@ -23,7 +23,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 		websocket.onopen = function(e)
 		{
 			console.log("Connect success!!! Begin login...");
-			sendCommand(Server_Command_Login,{'nickname':nickname});
+			sendCommand(self.Server_Command_Login,{'nickname':nickname});
 		}
 		websocket.onmessage = function(e)
 		{
@@ -34,17 +34,17 @@ module.exports = function Server(serverUrl,commandCallBack)
 
 	this.sync = function(data)
 	{
-		sendCommand(Server_Command_Sync,data);	
+		sendCommand(self.Server_Command_Sync,data);	
 	}
 
 	this.loadMap = function()
 	{
-		sendCommand(Server_Command_Map,"");	
+		sendCommand(self.Server_Command_Map,"");	
 	}
 
 	this.catchProp = function(uid)
 	{
-		sendCommand(Server_Command_CatchProp,uid);	
+		sendCommand(self.Server_Command_CatchProp,uid);	
 	}
 
 	//process response
@@ -54,7 +54,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 		self.loginUser = obj.data;
 		if(self.commandCallBack)
 		{
-			self.commandCallBack(Server_Command_Login,obj);
+			self.commandCallBack(self.Server_Command_Login,obj);
 		}
 	}
 
@@ -62,7 +62,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 	{
 		if(self.commandCallBack)
 		{
-			self.commandCallBack(Server_Command_Sync,obj);
+			self.commandCallBack(self.Server_Command_Sync,obj);
 		}
 	}
 
@@ -70,7 +70,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 	{
 		if(self.commandCallBack)
 		{
-			self.commandCallBack(Server_Command_Logout,obj);
+			self.commandCallBack(self.Server_Command_Logout,obj);
 		}
 	}
 
@@ -110,7 +110,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 		if(websocket == null)
 			return;
 		var result = new Object();
-		if(command != Server_Command_Login)
+		if(command != self.Server_Command_Login)
 			if(self.loginUser)
 				result.uid = self.loginUser.uid;
 			else

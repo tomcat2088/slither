@@ -11,7 +11,7 @@ module.exports = function Game()
 
 	self.slitherMap = new Array();
 	this.server = new Server("",function(command,obj){
-		if(command == Server_Command_Login)
+		if(command == self.server.Server_Command_Login)
 		{
 			loginUser = obj.data;
 			self.server.loadMap();
@@ -50,7 +50,7 @@ module.exports = function Game()
 		}
 	};
 }
-},{"./server.js":6,"./slither.js":7}],2:[function(require,module,exports){
+},{"./server.js":7,"./slither.js":8}],2:[function(require,module,exports){
 var Game = require("./game.js");
 var Point = require("./math.js");
 var GameRender = require("./render/game_render.js");
@@ -58,11 +58,16 @@ var SlitherRender = require("./render/slither_render.js");
 window.onload = function()
 {
 	window.game = new Game();
-	window.gameRender = new GameRender(document.body,{width:400,height:400},function(deltaTime){
+	window.gameRender = new GameRender(document.body,{width:2000,height:2000},function(deltaTime){
 		window.game.update(deltaTime);
 	});
 
 	window.gameRender.registerRender(new SlitherRender(game.slither));
+	window.gameRender.focusCallback = function()
+	{
+		var pt = game.slither.points[game.slither.points.length - 1];
+		return pt;
+	}
 }
 
 window.addEventListener('mousemove',function(e){
@@ -118,6 +123,7 @@ module.exports = function Point(x,y)
 	}
 }
 },{}],4:[function(require,module,exports){
+var textureManager = require("./texture_manager.js")
 module.exports = function GameRender(container, size,updateCallBack) {
 	var scene = new THREE.Scene();
 	var width = window.innerWidth;
@@ -134,11 +140,19 @@ module.exports = function GameRender(container, size,updateCallBack) {
 
 	camera.position.z = 999;
 
-	var material = new THREE.MeshBasicMaterial({
-		color: 0xdddddd
-	});
-	var ground = new THREE.Mesh(new THREE.PlaneGeometry(size.width, size.height), material);
+
+	var ground = new THREE.Mesh(new THREE.PlaneGeometry(size.width, size.height,500,500));
 	scene.add(ground);
+	textureManager.texture("static/bg.png",function(texture){
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set(100,100);
+		var material = new THREE.MeshBasicMaterial({
+			map:texture
+		});
+		ground.material = material;
+	});
+
 
 	var self = this;
 	this.scene = scene;
@@ -149,9 +163,15 @@ module.exports = function GameRender(container, size,updateCallBack) {
 	}
 
 	var lastDate = new Date();
+
+	var stats = new Stats();
+	stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+	document.body.appendChild( stats.dom );
+
+
 	var render = function () {
 		requestAnimationFrame( render );
-		
+		stats.begin();
 		var now = new Date();
 		var delta = (now - lastDate);
 		lastDate = now;
@@ -160,13 +180,24 @@ module.exports = function GameRender(container, size,updateCallBack) {
 			self.registeredRenders[key].update(delta,self);
 		}
 		if(updateCallBack)
-			updateCallBack(delta)
+			updateCallBack(delta);
+
+		if(self.focusCallback)
+		{
+			var cameraPoint = self.focusCallback();
+			camera.position.x = cameraPoint.x;
+			camera.position.y = cameraPoint.y;
+		}
+
+		stats.end();
 		renderer.render(scene, camera);
 	};
 	render();
 }
 
-},{}],5:[function(require,module,exports){
+},{"./texture_manager.js":6}],5:[function(require,module,exports){
+var Point = require("../math.js");
+var textureManager = require("./texture_manager.js");
 module.exports = function SlitherRender(slither)
 {
 	var self = this;
@@ -174,12 +205,7 @@ module.exports = function SlitherRender(slither)
 	this.meshes = new Array();
 	this.update = function(deltaTime,gameRender)
 	{
-		//if(this.cacheMeshes.length == 0)
-		//{
-			this.init(gameRender);
-		//}
-		// self.node.position.x = self.slither.points[0].x;
-		// self.node.position.y = self.slither.points[0].y;
+		this.init(gameRender);
 	}
 
 	this.init = function(gameRender)
@@ -189,12 +215,21 @@ module.exports = function SlitherRender(slither)
 			var count = this.slither.length / (this.slither.width / 2);
 			for(var i = 0;i < count;i++)
 			{
-				var material = new THREE.MeshBasicMaterial({color:0x330000,alphaMap:undefined,transparent: true});
+				var material = new THREE.MeshBasicMaterial({color:0x330000});
 				var circleGeometry = new THREE.PlaneGeometry( self.slither.width,self.slither.width );
 				mesh = new THREE.Mesh( circleGeometry, material );
 				gameRender.scene.add(mesh);
 				self.meshes.push(mesh);
 			}
+
+			textureManager.texture("static/circle_mask.png",function(texture){
+			console.log(texture);
+			for(var key in self.meshes)
+			{
+				var material = new THREE.MeshBasicMaterial({color:0x330000,alphaMap:texture,transparent: true});
+				self.meshes[key].material = material;
+			}
+		});
 		}
 		circleGeometryFromLine(self.slither.points,0,gameRender.scene);
 	}
@@ -213,6 +248,7 @@ module.exports = function SlitherRender(slither)
 
 	function pointOnLineForDistance(pts,distance)
 	{
+		// return new Point(0,0);
 		var currentDistance = 0;
 		for(var index = 0;index < pts.length - 1;index++)
 		{
@@ -228,7 +264,37 @@ module.exports = function SlitherRender(slither)
 		return pts[pts.length - 1];
 	}
 }
-},{}],6:[function(require,module,exports){
+},{"../math.js":3,"./texture_manager.js":6}],6:[function(require,module,exports){
+function TextureManager()
+{
+	var self = this;
+	var loader = new THREE.TextureLoader();
+	self.cachedTexture = new Object();
+	this.texture = function(url,callback)
+	{
+		if(self.cachedTexture[url])
+		{
+			if(callback)
+				callback(self.cachedTexture[url])
+			return;
+		}
+		loader.load(
+			// resource URL
+			url,
+			// Function when resource is loaded
+			function ( texture ) {
+				if(callback)
+				{
+					callback(texture);
+				}
+			}
+		);
+	}
+}
+
+var manager = new TextureManager();
+module.exports = manager;
+},{}],7:[function(require,module,exports){
 module.exports = function Server(serverUrl,commandCallBack)
 {
 	var self = this;
@@ -254,7 +320,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 		websocket.onopen = function(e)
 		{
 			console.log("Connect success!!! Begin login...");
-			sendCommand(Server_Command_Login,{'nickname':nickname});
+			sendCommand(self.Server_Command_Login,{'nickname':nickname});
 		}
 		websocket.onmessage = function(e)
 		{
@@ -265,17 +331,17 @@ module.exports = function Server(serverUrl,commandCallBack)
 
 	this.sync = function(data)
 	{
-		sendCommand(Server_Command_Sync,data);	
+		sendCommand(self.Server_Command_Sync,data);	
 	}
 
 	this.loadMap = function()
 	{
-		sendCommand(Server_Command_Map,"");	
+		sendCommand(self.Server_Command_Map,"");	
 	}
 
 	this.catchProp = function(uid)
 	{
-		sendCommand(Server_Command_CatchProp,uid);	
+		sendCommand(self.Server_Command_CatchProp,uid);	
 	}
 
 	//process response
@@ -285,7 +351,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 		self.loginUser = obj.data;
 		if(self.commandCallBack)
 		{
-			self.commandCallBack(Server_Command_Login,obj);
+			self.commandCallBack(self.Server_Command_Login,obj);
 		}
 	}
 
@@ -293,7 +359,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 	{
 		if(self.commandCallBack)
 		{
-			self.commandCallBack(Server_Command_Sync,obj);
+			self.commandCallBack(self.Server_Command_Sync,obj);
 		}
 	}
 
@@ -301,7 +367,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 	{
 		if(self.commandCallBack)
 		{
-			self.commandCallBack(Server_Command_Logout,obj);
+			self.commandCallBack(self.Server_Command_Logout,obj);
 		}
 	}
 
@@ -341,7 +407,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 		if(websocket == null)
 			return;
 		var result = new Object();
-		if(command != Server_Command_Login)
+		if(command != self.Server_Command_Login)
 			if(self.loginUser)
 				result.uid = self.loginUser.uid;
 			else
@@ -352,15 +418,15 @@ module.exports = function Server(serverUrl,commandCallBack)
 	}
 }
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var Point = require("./math.js");
 
 module.exports = function Slither()
 {
 	var self = this;
-	self.length = 150;
-	self.width = Math.random() * 10;
-	self.points = [new Point(0,-50),new Point(0,0)];
+	self.length = 50;
+	self.width = 30;
+	self.points = [new Point(0,-150),new Point(0,0)];
 	self.color = '#c32000';
 
 	self.speed = 80;
@@ -390,22 +456,22 @@ module.exports = function Slither()
 		forwardDistance = updateHead(deltaTime);
 		updateTail(deltaTime,forwardDistance);
 
-		if(head().x < -400)
-		{
-			move(800,0);
-		}
-		if(head().x > 400)
-		{
-			move(-800,0);
-		}
-		if(head().y < -300)
-		{
-			move(0,600);
-		}
-		if(head().y > 300)
-		{
-			move(0,-600);
-		}
+		// if(head().x < -400)
+		// {
+		// 	move(800,0);
+		// }
+		// if(head().x > 400)
+		// {
+		// 	move(-800,0);
+		// }
+		// if(head().y < -300)
+		// {
+		// 	move(0,600);
+		// }
+		// if(head().y > 300)
+		// {
+		// 	move(0,-600);
+		// }
 
 		// if(head().x < 0 || head().x > 800)
 		// 	self.direction.x = -self.direction.x;

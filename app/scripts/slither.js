@@ -3,9 +3,9 @@ var Point = require("./math.js");
 module.exports = function Slither()
 {
 	var self = this;
-	self.length = 150;
-	self.width = Math.random() * 10;
-	self.points = [new Point(0,-50),new Point(0,0)];
+	self.length = 50;
+	self.width = 30;
+	self.points = [new Point(0,-150),new Point(0,0)];
 	self.color = '#c32000';
 
 	self.speed = 80;
@@ -35,22 +35,22 @@ module.exports = function Slither()
 		forwardDistance = updateHead(deltaTime);
 		updateTail(deltaTime,forwardDistance);
 
-		if(head().x < -400)
-		{
-			move(800,0);
-		}
-		if(head().x > 400)
-		{
-			move(-800,0);
-		}
-		if(head().y < -300)
-		{
-			move(0,600);
-		}
-		if(head().y > 300)
-		{
-			move(0,-600);
-		}
+		// if(head().x < -400)
+		// {
+		// 	move(800,0);
+		// }
+		// if(head().x > 400)
+		// {
+		// 	move(-800,0);
+		// }
+		// if(head().y < -300)
+		// {
+		// 	move(0,600);
+		// }
+		// if(head().y > 300)
+		// {
+		// 	move(0,-600);
+		// }
 
 		// if(head().x < 0 || head().x > 800)
 		// 	self.direction.x = -self.direction.x;

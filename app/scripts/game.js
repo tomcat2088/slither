@@ -10,7 +10,7 @@ module.exports = function Game()
 
 	self.slitherMap = new Array();
 	this.server = new Server("",function(command,obj){
-		if(command == Server_Command_Login)
+		if(command == self.server.Server_Command_Login)
 		{
 			loginUser = obj.data;
 			self.server.loadMap();

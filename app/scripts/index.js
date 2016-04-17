@@ -5,11 +5,16 @@ var SlitherRender = require("./render/slither_render.js");
 window.onload = function()
 {
 	window.game = new Game();
-	window.gameRender = new GameRender(document.body,{width:400,height:400},function(deltaTime){
+	window.gameRender = new GameRender(document.body,{width:2000,height:2000},function(deltaTime){
 		window.game.update(deltaTime);
 	});
 
 	window.gameRender.registerRender(new SlitherRender(game.slither));
+	window.gameRender.focusCallback = function()
+	{
+		var pt = game.slither.points[game.slither.points.length - 1];
+		return pt;
+	}
 }
 
 window.addEventListener('mousemove',function(e){
