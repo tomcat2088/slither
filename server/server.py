@@ -9,7 +9,7 @@ import slithermap
 users = {};
 slithers = {};
 sockets = {}
-slither_map = slithermap.gen_slither_map(0,0,800,600,5)
+slither_map = slithermap.gen_slither_map(0,0,1000,1000,50)
 
 Command_Login = 10000
 Command_Sync = 10001
@@ -52,7 +52,8 @@ async def send_map(uid):
 async def catch_prop(uid,prop_uid):
 	if prop_uid in slither_map.keys():
 		ret = result(0,Command_CatchProp,uid,slither_map[prop_uid])
-		await sockets[uid].send(json.dumps(ret))
+		for key in sockets:
+			await sockets[key].send(json.dumps(ret))
 		del slither_map[prop_uid]
 
 async def logout(uid):

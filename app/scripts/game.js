@@ -1,6 +1,8 @@
 var Slither = require("./slither.js");
 var Server = require("./server.js");
 var Point = require("./math.js");
+var SlitherRender = require("./render/slither_render.js");
+var SlitherMapRender = require("./render/slither_map_render.js");
 module.exports = function Game()
 {
 	var self = this;
@@ -16,13 +18,25 @@ module.exports = function Game()
 			loginUser = obj.data;
 			self.server.loadMap();
 		}
-		else if(command == self.server.ServerServer_Command_Sync)
+		else if(command == self.server.Server_Command_Sync)
 		{
-			self.otherSlithers[obj.uid] = obj.data;
+			if(obj.uid == self.server.loginUser.uid)
+			{
+				self.slither.deserialize(obj.data);
+				return;
+			}
+			if(!self.otherSlithers[obj.uid])
+			{
+				self.otherSlithers[obj.uid] = new Slither();
+				window.gameRender.registerRender(new SlitherRender(self.otherSlithers[obj.uid]),obj.uid);
+			}
+			self.otherSlithers[obj.uid].deserialize(obj.data);
+				
 		}
 		else if(command == self.server.Server_Command_Map)
 		{
 			self.slitherMap = obj.data;
+			window.gameRender.registerRender(new SlitherMapRender(self.slitherMap));
 		}
 		else if(command == self.server.Server_Command_CatchProp)
 		{
@@ -40,13 +54,20 @@ module.exports = function Game()
 		deltaTime /= 1000;
 
 		self.slither.update(deltaTime);
-		// //self.server.sync(self.slither.serialize());
+		self.server.sync(self.slither.serialize());
 
 		var lastPt = self.slither.points[self.slither.points.length - 1];
 
-		// for(var prop in self.slitherMap)
-		// {
-
-		// }
+		for(var prop in self.slitherMap)
+		{
+			var mapUnit = self.slitherMap[prop];
+			var point = new Point(mapUnit.x,mapUnit.y);
+			if(point.sub(lastPt).len() <= self.slither.width && 
+				prop.isCatched == undefined)
+			{
+				self.server.catchProp(prop);
+				prop.isCatched = true;
+			}
+		}
 	};
 }

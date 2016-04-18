@@ -11,9 +11,19 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 	canvas.height = height;
 
 	this.registeredRenders = new Array();
-	this.registerRender = function(render)
+	this.mappedRenders = new Object();
+	this.registerRender = function(render,uid)
 	{
 		self.registeredRenders.push(render);
+		if(uid)
+		{
+			this.mappedRenders[uid] = render;
+		}
+	}
+
+	this.isRenderRegistered = function(uid)
+	{
+		return this.mappedRenders[uid] != undefined;
 	}
 
 	var lastDate = new Date();

@@ -1,14 +1,12 @@
-var Point = require("./math.js");
-
-module.exports = function Slither()
+function Slither()
 {
 	var self = this;
-	self.length = 100;
-	self.width = 20;
-	self.points = [new Point(0,-250),new Point(0,0)];
+	self.length = 150;
+	self.width = Math.random() * 10;
+	self.points = [new Point(0,-50),new Point(0,0)];
 	self.color = '#c32000';
 
-	self.speed = 100;
+	self.speed = 80;
 	self.direction = (new Point(2,2)).normalize();
 
 	this.serialize = function()
@@ -21,15 +19,12 @@ module.exports = function Slither()
 		return obj;
 	}
 
-	this.deserialize = function(obj)
+	this.deserialize = function(dataStr)
 	{
+		var obj = JSON.parse(dataStr);
 		self.length = obj.length;
 		self.width = obj.width;
-		self.points = new Array();
-		for(var key in obj.points)
-		{
-			self.points.push(new Point(obj.points[key].x,obj.points[key].y));
-		}
+		self.points = obj.points;
 		self.color = obj.color;
 	}
 
@@ -38,22 +33,22 @@ module.exports = function Slither()
 		forwardDistance = updateHead(deltaTime);
 		updateTail(deltaTime,forwardDistance);
 
-		// if(head().x < -400)
-		// {
-		// 	move(800,0);
-		// }
-		// if(head().x > 400)
-		// {
-		// 	move(-800,0);
-		// }
-		// if(head().y < -300)
-		// {
-		// 	move(0,600);
-		// }
-		// if(head().y > 300)
-		// {
-		// 	move(0,-600);
-		// }
+		if(head().x < -400)
+		{
+			move(800,0);
+		}
+		if(head().x > 400)
+		{
+			move(-800,0);
+		}
+		if(head().y < -300)
+		{
+			move(0,600);
+		}
+		if(head().y > 300)
+		{
+			move(0,-600);
+		}
 
 		// if(head().x < 0 || head().x > 800)
 		// 	self.direction.x = -self.direction.x;

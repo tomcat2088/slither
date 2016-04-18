@@ -2,6 +2,8 @@
 var Slither = require("./slither.js");
 var Server = require("./server.js");
 var Point = require("./math.js");
+var SlitherRender = require("./render/slither_render.js");
+var SlitherMapRender = require("./render/slither_map_render.js");
 module.exports = function Game()
 {
 	var self = this;
@@ -17,13 +19,25 @@ module.exports = function Game()
 			loginUser = obj.data;
 			self.server.loadMap();
 		}
-		else if(command == self.server.ServerServer_Command_Sync)
+		else if(command == self.server.Server_Command_Sync)
 		{
-			self.otherSlithers[obj.uid] = obj.data;
+			if(obj.uid == self.server.loginUser.uid)
+			{
+				self.slither.deserialize(obj.data);
+				return;
+			}
+			if(!self.otherSlithers[obj.uid])
+			{
+				self.otherSlithers[obj.uid] = new Slither();
+				window.gameRender.registerRender(new SlitherRender(self.otherSlithers[obj.uid]),obj.uid);
+			}
+			self.otherSlithers[obj.uid].deserialize(obj.data);
+				
 		}
 		else if(command == self.server.Server_Command_Map)
 		{
 			self.slitherMap = obj.data;
+			window.gameRender.registerRender(new SlitherMapRender(self.slitherMap));
 		}
 		else if(command == self.server.Server_Command_CatchProp)
 		{
@@ -41,17 +55,24 @@ module.exports = function Game()
 		deltaTime /= 1000;
 
 		self.slither.update(deltaTime);
-		// //self.server.sync(self.slither.serialize());
+		self.server.sync(self.slither.serialize());
 
 		var lastPt = self.slither.points[self.slither.points.length - 1];
 
-		// for(var prop in self.slitherMap)
-		// {
-
-		// }
+		for(var prop in self.slitherMap)
+		{
+			var mapUnit = self.slitherMap[prop];
+			var point = new Point(mapUnit.x,mapUnit.y);
+			if(point.sub(lastPt).len() <= self.slither.width && 
+				prop.isCatched == undefined)
+			{
+				self.server.catchProp(prop);
+				prop.isCatched = true;
+			}
+		}
 	};
 }
-},{"./math.js":3,"./server.js":7,"./slither.js":8}],2:[function(require,module,exports){
+},{"./math.js":3,"./render/slither_map_render.js":5,"./render/slither_render.js":6,"./server.js":8,"./slither.js":9}],2:[function(require,module,exports){
 var Game = require("./game.js");
 var Point = require("./math.js");
 var GameRender = require("./render/game_render.js");
@@ -78,7 +99,7 @@ window.addEventListener('mousemove',function(e){
 	direction = direction.normalize();
 	game.slither.direction = direction;
 });
-},{"./game.js":1,"./math.js":3,"./render/game_render.js":4,"./render/slither_render.js":5}],3:[function(require,module,exports){
+},{"./game.js":1,"./math.js":3,"./render/game_render.js":4,"./render/slither_render.js":6}],3:[function(require,module,exports){
 module.exports = function Point(x,y)
 {
 	var self = this;
@@ -139,9 +160,19 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 	canvas.height = height;
 
 	this.registeredRenders = new Array();
-	this.registerRender = function(render)
+	this.mappedRenders = new Object();
+	this.registerRender = function(render,uid)
 	{
 		self.registeredRenders.push(render);
+		if(uid)
+		{
+			this.mappedRenders[uid] = render;
+		}
+	}
+
+	this.isRenderRegistered = function(uid)
+	{
+		return this.mappedRenders[uid] != undefined;
 	}
 
 	var lastDate = new Date();
@@ -187,7 +218,23 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 	render();
 }
 
-},{"../math.js":3,"./texture_manager.js":6}],5:[function(require,module,exports){
+},{"../math.js":3,"./texture_manager.js":7}],5:[function(require,module,exports){
+module.exports = function SlitherMapRender(map)
+{
+	var self = this;
+	this.map = map;
+	this.update = function(deltaTime,gameRender)
+	{
+		var context = self.context;
+		for(var key in self.map)
+		{
+			var point = self.map[key];
+			gameRender.context.fillStyle = "#ff0000";
+			gameRender.context.fillRect(point.x,point.y,5,5);
+		}
+	}
+}
+},{}],6:[function(require,module,exports){
 var Point = require("../math.js");
 var textureManager = require("./texture_manager.js");
 module.exports = function SlitherRender(slither)
@@ -240,7 +287,7 @@ module.exports = function SlitherRender(slither)
 		return pts[pts.length - 1];
 	}
 }
-},{"../math.js":3,"./texture_manager.js":6}],6:[function(require,module,exports){
+},{"../math.js":3,"./texture_manager.js":7}],7:[function(require,module,exports){
 function TextureManager()
 {
 	var self = this;
@@ -270,7 +317,7 @@ function TextureManager()
 
 var manager = new TextureManager();
 module.exports = manager;
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 module.exports = function Server(serverUrl,commandCallBack)
 {
 	var self = this;
@@ -394,7 +441,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 	}
 }
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var Point = require("./math.js");
 
 module.exports = function Slither()
@@ -418,12 +465,15 @@ module.exports = function Slither()
 		return obj;
 	}
 
-	this.deserialize = function(dataStr)
+	this.deserialize = function(obj)
 	{
-		var obj = JSON.parse(dataStr);
 		self.length = obj.length;
 		self.width = obj.width;
-		self.points = obj.points;
+		self.points = new Array();
+		for(var key in obj.points)
+		{
+			self.points.push(new Point(obj.points[key].x,obj.points[key].y));
+		}
 		self.color = obj.color;
 	}
 

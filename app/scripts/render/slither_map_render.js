@@ -1,26 +1,15 @@
 module.exports = function SlitherMapRender(map)
 {
 	var self = this;
-	this.slither = slither;
-	this.mapNodes;
+	this.map = map;
 	this.update = function(deltaTime,gameRender)
 	{
-		if(!this.node)
+		var context = self.context;
+		for(var key in self.map)
 		{
-			this.init(gameRender);
+			var point = self.map[key];
+			gameRender.context.fillStyle = "#ff0000";
+			gameRender.context.fillRect(point.x,point.y,5,5);
 		}
-		self.slither.update(deltaTime/1000);
-		self.node.position.x = self.slither.points[0].x;
-		self.node.position.y = self.slither.points[0].y;
-	}
-
-	this.init = function(gameRender)
-	{
-		var material = new THREE.MeshBasicMaterial({
-			color: 0xddd222
-		});
-		var node = new THREE.Mesh(new THREE.PlaneGeometry(20,20), material);
-		gameRender.scene.add(node);
-		this.node = node;
 	}
 }
