@@ -1,5 +1,6 @@
 var Slither = require("./slither.js");
 var Server = require("./server.js");
+var Point = require("./math.js");
 module.exports = function Game()
 {
 	var self = this;
@@ -39,13 +40,13 @@ module.exports = function Game()
 		deltaTime /= 1000;
 
 		self.slither.update(deltaTime);
-		//self.server.sync(self.slither.serialize());
+		// //self.server.sync(self.slither.serialize());
 
 		var lastPt = self.slither.points[self.slither.points.length - 1];
 
-		for(var prop in self.slitherMap)
-		{
+		// for(var prop in self.slitherMap)
+		// {
 
-		}
+		// }
 	};
 }

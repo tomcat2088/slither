@@ -3,12 +3,12 @@ var Point = require("./math.js");
 module.exports = function Slither()
 {
 	var self = this;
-	self.length = 50;
-	self.width = 30;
-	self.points = [new Point(0,-150),new Point(0,0)];
+	self.length = 100;
+	self.width = 20;
+	self.points = [new Point(0,-250),new Point(0,0)];
 	self.color = '#c32000';
 
-	self.speed = 80;
+	self.speed = 100;
 	self.direction = (new Point(2,2)).normalize();
 
 	this.serialize = function()

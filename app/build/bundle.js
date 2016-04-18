@@ -1,6 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var Slither = require("./slither.js");
 var Server = require("./server.js");
+var Point = require("./math.js");
 module.exports = function Game()
 {
 	var self = this;
@@ -40,17 +41,17 @@ module.exports = function Game()
 		deltaTime /= 1000;
 
 		self.slither.update(deltaTime);
-		//self.server.sync(self.slither.serialize());
+		// //self.server.sync(self.slither.serialize());
 
 		var lastPt = self.slither.points[self.slither.points.length - 1];
 
-		for(var prop in self.slitherMap)
-		{
+		// for(var prop in self.slitherMap)
+		// {
 
-		}
+		// }
 	};
 }
-},{"./server.js":7,"./slither.js":8}],2:[function(require,module,exports){
+},{"./math.js":3,"./server.js":7,"./slither.js":8}],2:[function(require,module,exports){
 var Game = require("./game.js");
 var Point = require("./math.js");
 var GameRender = require("./render/game_render.js");
@@ -58,10 +59,12 @@ var SlitherRender = require("./render/slither_render.js");
 window.onload = function()
 {
 	window.game = new Game();
-	window.gameRender = new GameRender(document.body,{width:2000,height:2000},function(deltaTime){
-		window.game.update(deltaTime);
+	window.gameRender = new GameRender('canvas',function(deltaTime){
+		
 	});
-
+	setInterval(function(){
+		window.game.update(1000/30);
+	}, 1000/30);
 	window.gameRender.registerRender(new SlitherRender(game.slither));
 	window.gameRender.focusCallback = function()
 	{
@@ -71,7 +74,7 @@ window.onload = function()
 }
 
 window.addEventListener('mousemove',function(e){
-	direction = new Point(e.clientX - window.innerWidth/2, - e.clientY + window.innerHeight/2);
+	direction = new Point(e.clientX - window.innerWidth/2,  e.clientY - window.innerHeight/2);
 	direction = direction.normalize();
 	game.slither.direction = direction;
 });
@@ -124,38 +127,17 @@ module.exports = function Point(x,y)
 }
 },{}],4:[function(require,module,exports){
 var textureManager = require("./texture_manager.js")
-module.exports = function GameRender(container, size,updateCallBack) {
-	var scene = new THREE.Scene();
+var Point = require("../math.js")
+module.exports = function GameRender(canvasId,updateCallBack) {
+	var self = this;
+
 	var width = window.innerWidth;
 	var height = window.innerHeight;
-	var camera = new THREE.OrthographicCamera(width / -2, width / 2, height / 2, height / -2, 1, 1000);
+	self.canvas = document.getElementById(canvasId);
+	self.context = canvas.getContext('2d');
+	canvas.width = width;
+	canvas.height = height;
 
-	var renderer = new THREE.WebGLRenderer();
-	renderer.setSize(window.innerWidth, window.innerHeight);
-
-	if (container)
-		container.appendChild(renderer.domElement);
-	else
-		document.body.appendChild(renderer.domElement);
-
-	camera.position.z = 999;
-
-
-	var ground = new THREE.Mesh(new THREE.PlaneGeometry(size.width, size.height,500,500));
-	scene.add(ground);
-	textureManager.texture("static/bg.png",function(texture){
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set(100,100);
-		var material = new THREE.MeshBasicMaterial({
-			map:texture
-		});
-		ground.material = material;
-	});
-
-
-	var self = this;
-	this.scene = scene;
 	this.registeredRenders = new Array();
 	this.registerRender = function(render)
 	{
@@ -164,8 +146,9 @@ module.exports = function GameRender(container, size,updateCallBack) {
 
 	var lastDate = new Date();
 
+	//init fps counter
 	var stats = new Stats();
-	stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+	stats.showPanel( 1 );
 	document.body.appendChild( stats.dom );
 
 
@@ -175,27 +158,36 @@ module.exports = function GameRender(container, size,updateCallBack) {
 		var now = new Date();
 		var delta = (now - lastDate);
 		lastDate = now;
+
+		self.context.fillStyle = "#fff";
+		self.context.fillRect(0,0,self.canvas.width,self.canvas.height);
+		
+		var offset = new Point(0,0);
+		if(self.focusCallback)
+		{
+			offset = self.focusCallback();
+		}
+
+		self.context.save();
+		self.context.translate(-offset.x + self.canvas.width / 2,-offset.y + self.canvas.height / 2);
+
+		self.context.fillStyle = "#f0f";
+		self.context.fillRect(0,0,20,20);
 		for(var key in self.registeredRenders)
 		{
 			self.registeredRenders[key].update(delta,self);
 		}
-		if(updateCallBack)
-			updateCallBack(delta);
 
-		if(self.focusCallback)
-		{
-			var cameraPoint = self.focusCallback();
-			camera.position.x = cameraPoint.x;
-			camera.position.y = cameraPoint.y;
-		}
+		self.context.restore();
+		if(updateCallBack)
+			updateCallBack(delta,self);
 
 		stats.end();
-		renderer.render(scene, camera);
 	};
 	render();
 }
 
-},{"./texture_manager.js":6}],5:[function(require,module,exports){
+},{"../math.js":3,"./texture_manager.js":6}],5:[function(require,module,exports){
 var Point = require("../math.js");
 var textureManager = require("./texture_manager.js");
 module.exports = function SlitherRender(slither)
@@ -203,52 +195,36 @@ module.exports = function SlitherRender(slither)
 	var self = this;
 	this.slither = slither;
 	this.meshes = new Array();
+	var img = new Image();
+	img.src = "http://127.0.0.1:8080/static/circle_mask.png";
 	this.update = function(deltaTime,gameRender)
 	{
-		this.init(gameRender);
+		var context = gameRender.context;
+		var points = self.slither.points;
+		drawCirclesOnLine(points,context,slither);
+
+		context.lineWidth = 1;
+		firstPt = points[points.length - 1];
+		context.strokeText("name",firstPt.x,firstPt.y - 5);
 	}
 
-	this.init = function(gameRender)
+	function drawCirclesOnLine(pts,context,slither)
 	{
-		if(self.meshes.length == 0)
-		{
-			var count = this.slither.length / (this.slither.width / 2);
-			for(var i = 0;i < count;i++)
-			{
-				var material = new THREE.MeshBasicMaterial({color:0x330000});
-				var circleGeometry = new THREE.PlaneGeometry( self.slither.width,self.slither.width );
-				mesh = new THREE.Mesh( circleGeometry, material );
-				gameRender.scene.add(mesh);
-				self.meshes.push(mesh);
-			}
-
-			textureManager.texture("static/circle_mask.png",function(texture){
-			console.log(texture);
-			for(var key in self.meshes)
-			{
-				var material = new THREE.MeshBasicMaterial({color:0x330000,alphaMap:texture,transparent: true});
-				self.meshes[key].material = material;
-			}
-		});
-		}
-		circleGeometryFromLine(self.slither.points,0,gameRender.scene);
-	}
-
-	function circleGeometryFromLine(pts,texture,scene)
-	{
-		var radius = self.slither.width / 2;
-		for(var index = 0;index < self.meshes.length;index++)
+		var radius = slither.width / 2;
+		var count = slither.length / radius;
+		for(var index = 0;index < count;index++)
 		{
 			var distance = radius * index;
 			var pt = pointOnLineForDistance(pts,distance);
-			self.meshes[index].position.x = pt.x;
-			self.meshes[index].position.y = pt.y;
+			context.fillStyle = "#300";
+			img.width = radius * 2;
+			img.height = radius * 2;
+			gameRender.context.drawImage(img,pt.x,pt.y,radius * 2,radius * 2);
 		}
 	}
 
 	function pointOnLineForDistance(pts,distance)
 	{
-		// return new Point(0,0);
 		var currentDistance = 0;
 		for(var index = 0;index < pts.length - 1;index++)
 		{
@@ -424,12 +400,12 @@ var Point = require("./math.js");
 module.exports = function Slither()
 {
 	var self = this;
-	self.length = 50;
-	self.width = 30;
-	self.points = [new Point(0,-150),new Point(0,0)];
+	self.length = 100;
+	self.width = 20;
+	self.points = [new Point(0,-250),new Point(0,0)];
 	self.color = '#c32000';
 
-	self.speed = 80;
+	self.speed = 100;
 	self.direction = (new Point(2,2)).normalize();
 
 	this.serialize = function()
