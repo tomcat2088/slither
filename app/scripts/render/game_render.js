@@ -41,7 +41,7 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 		var delta = (now - lastDate);
 		lastDate = now;
 
-		self.context.fillStyle = "#fff";
+		self.context.fillStyle = "#333333";
 		self.context.fillRect(0,0,self.canvas.width,self.canvas.height);
 		
 		var offset = new Point(0,0);
@@ -52,6 +52,24 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 
 		self.context.save();
 		self.context.translate(-offset.x + self.canvas.width / 2,-offset.y + self.canvas.height / 2);
+
+		self.context.strokeStyle = "#888888";
+		self.context.beginPath();
+		var mapLength = 10000;
+		for(var x = -mapLength;x < mapLength;x += 50)
+		{
+			self.context.moveTo(x,-mapLength);
+			self.context.lineTo(x,mapLength);
+		}
+		
+		for(var y = -mapLength;y < mapLength;y += 50)
+		{
+			self.context.moveTo(-mapLength,y);
+			self.context.lineTo(mapLength,y);
+		}
+
+		self.context.stroke();
+
 
 		self.context.fillStyle = "#f0f";
 		self.context.fillRect(0,0,20,20);

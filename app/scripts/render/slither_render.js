@@ -11,8 +11,20 @@ module.exports = function SlitherRender(slither)
 	{
 		var context = gameRender.context;
 		var points = self.slither.points;
-		drawCirclesOnLine(points,context,slither);
-
+		//drawCirclesOnLine(points,context,slither);
+		// context.lineWidth = self.slither.width;
+		// context.strokeStyle = self.slither.color;
+		// context.lineCap="round";
+		// context.beginPath();
+		// for(var key in points)
+		// {
+		// 	if(parseInt(key) == 0)
+		// 		context.moveTo(points[key].x,points[key].y);
+		// 	else
+		// 		context.lineTo(points[key].x,points[key].y);
+		// }
+		// context.stroke();
+		drawCirclesOnLine(points,context,self.slither);
 		context.lineWidth = 1;
 		firstPt = points[points.length - 1];
 		context.strokeText("name",firstPt.x,firstPt.y - 5);
@@ -21,32 +33,38 @@ module.exports = function SlitherRender(slither)
 	function drawCirclesOnLine(pts,context,slither)
 	{
 		var radius = slither.width / 2;
-		var count = slither.length / radius;
-		for(var index = 0;index < count;index++)
-		{
-			var distance = radius * index;
-			var pt = pointOnLineForDistance(pts,distance);
-			context.fillStyle = "#300";
-			img.width = radius * 2;
-			img.height = radius * 2;
-			gameRender.context.drawImage(img,pt.x,pt.y,radius * 2,radius * 2);
-		}
-	}
+		context.fillStyle = "#300";
+		img.width = radius * 2;
+		img.height = radius * 2;
 
-	function pointOnLineForDistance(pts,distance)
-	{
-		var currentDistance = 0;
-		for(var index = 0;index < pts.length - 1;index++)
+		var currentVec;
+		var pointSearchIndex = 0;
+		var trackedLen = 0;
+		var drawLocationLen = 0;
+
+		while(1)
 		{
-			var lineVec = pts[index + 1].sub(pts[index]).normalize();
-			var len = pts[index + 1].sub(pts[index]).len();
-			if(currentDistance + len >= distance)
+			var delta = slither.points[pointSearchIndex + 1].sub(slither.points[pointSearchIndex]);
+			currentVec = delta.normalize();
+			var totalLen = delta.len();
+
+			if(trackedLen + totalLen >= drawLocationLen)
 			{
-				var pt = pts[index].add(lineVec.mul(distance - currentDistance));
-				return pt;
+				var offset = drawLocationLen - trackedLen;
+				var drawPt = slither.points[pointSearchIndex].add(currentVec.mul(offset));
+				drawLocationLen += radius / 2;
+				context.drawImage(img,drawPt.x,drawPt.y,radius * 2,radius * 2);
 			}
-			currentDistance += len;
+			else
+			{
+				pointSearchIndex ++;
+				trackedLen += totalLen;
+				if(pointSearchIndex >= pts.length - 1)
+				{
+					context.drawImage(img,pts[pts.length - 1].x,pts[pts.length - 1].y,radius * 2,radius * 2);
+					return;
+				}
+			}
 		}
-		return pts[pts.length - 1];
 	}
 }

@@ -31,7 +31,7 @@ module.exports = function Point(x,y)
 
 	self.equal = function(pt)
 	{
-		if(Math.abs(self.x - pt.x) < 0.0001 && Math.abs(self.y - pt.y) < 0.0001)
+		if(self.x == pt.x && self.y == pt.y)
 			return true;
 		return false;
 	}
