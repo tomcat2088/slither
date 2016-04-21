@@ -6,7 +6,7 @@ module.exports = function SlitherRender(slither)
 	this.slither = slither;
 	this.meshes = new Array();
 	var img = new Image();
-	img.src = "http://127.0.0.1:8080/static/circle_mask.png";
+	img.src = "static/circle_mask.png";
 	this.update = function(deltaTime,gameRender)
 	{
 		var context = gameRender.context;

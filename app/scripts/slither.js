@@ -37,39 +37,6 @@ module.exports = function Slither()
 	{
 		forwardDistance = updateHead(deltaTime);
 		updateTail(deltaTime,forwardDistance);
-
-		// if(head().x < -400)
-		// {
-		// 	move(800,0);
-		// }
-		// if(head().x > 400)
-		// {
-		// 	move(-800,0);
-		// }
-		// if(head().y < -300)
-		// {
-		// 	move(0,600);
-		// }
-		// if(head().y > 300)
-		// {
-		// 	move(0,-600);
-		// }
-
-		// if(head().x < 0 || head().x > 800)
-		// 	self.direction.x = -self.direction.x;
-		// if(head().y < 0 || head().y > 600)
-		// 	self.direction.y = -self.direction.y;
-
-		//self.length += 10 * deltaTime;
-	}
-
-	function move(offsetX,offsetY)
-	{
-		for(var index in self.points)
-		{
-			self.points[index].x += offsetX;
-			self.points[index].y += offsetY;
-		}
 	}
 
 	//Head

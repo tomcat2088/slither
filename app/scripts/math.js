@@ -3,19 +3,37 @@ module.exports = function Point(x,y)
 	var self = this;
 	self.x = x;
 	self.y = y;
-	self.add = function(pt)
+	self.add = function(pt,addToSelf)
 	{
-		return new Point(self.x + pt.x,self.y + pt.y);
+		if(addToSelf)
+		{
+			self.x += pt.x;
+			self.y += pt.y;
+		}
+		else
+			return new Point(self.x + pt.x,self.y + pt.y);
 	}
 
-	self.sub = function(pt)
-	{
-		return new Point(self.x - pt.x,self.y - pt.y);
+	self.sub = function(pt,addToSelf)
+	{		
+		if(addToSelf)
+		{
+			self.x -= pt.x;
+			self.y -= pt.y;
+		}
+		else
+			return new Point(self.x - pt.x,self.y - pt.y);
 	}
 
-	self.mul = function(val)
+	self.mul = function(val,addToSelf)
 	{
-		return new Point(self.x * val,self.y * val);
+		if(addToSelf)
+		{
+			self.x *= val;
+			self.y *= val;
+		}
+		else
+			return new Point(self.x * val,self.y * val);
 	}
 
 	self.len = function()
@@ -23,10 +41,16 @@ module.exports = function Point(x,y)
 		return Math.sqrt(self.x * self.x + self.y*self.y);
 	}
 
-	self.normalize = function()
+	self.normalize = function(addToSelf)
 	{
 		var len = Math.sqrt(self.x * self.x + self.y*self.y);
-		return new Point(self.x / len,self.y / len);
+		if(addToSelf)
+		{
+			self.x /= len;
+			self.y /= len;
+		}
+		else
+			return new Point(self.x / len,self.y / len);
 	}
 
 	self.equal = function(pt)
@@ -36,11 +60,20 @@ module.exports = function Point(x,y)
 		return false;
 	}
 
-	self.normal = function()
+	self.normal = function(addToSelf)
 	{
-		var normalizePt = self.normalize();
-		var y = normalizePt.x / Math.sqrt(1 + normalizePt.y * normalizePt.y);
+		var len = Math.sqrt(self.x * self.x + self.y*self.y);
+		var normalizePtX = self.x / len;
+		var normalizePtY = self.y / len;
+		var y = normalizePtX / Math.sqrt(1 + normalizePtY * normalizePtY);
 		var x = Math.sqrt(1 - y * y);
-		return new Point(x,y);
+
+		if(addToSelf)
+		{
+			self.x = x;
+			self.y = y;
+		}
+		else
+			return new Point(x,y);
 	}
 }
