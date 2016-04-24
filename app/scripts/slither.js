@@ -3,12 +3,12 @@ var Point = require("./math.js");
 module.exports = function Slither()
 {
 	var self = this;
-	self.length = 1800;
+	self.length = 9000;
 	self.width = 40;
 	self.points = [new Point(0,-250),new Point(0,0)];
-	self.color = '#c32000';
+	self.color = '#ff3300';
 
-	self.speed = 180;
+	self.speed = 280;
 	self.direction = (new Point(2,2)).normalize();
 
 	this.serialize = function()
@@ -64,21 +64,23 @@ module.exports = function Slither()
 		return self.points[self.points.length - 1];
 	}
 
+	var caculatePoint = new Point();
 	//Tail
 	function updateTail(deltaTime,forwardDistance)
 	{
 		var trackedLen = 0;
 		for(var index=self.points.length-1;index >= 1;index--)
 		{
-			var segmentLen = self.points[index].sub(self.points[index-1]).len();
+			self.points[index].assign(caculatePoint);
+			caculatePoint.sub(self.points[index-1],true);
+			var segmentLen = caculatePoint.len();
 			trackedLen+=segmentLen;
 			if(trackedLen >= self.length)
 			{
 				//track finish
 				var forwardOnThisSeg =  trackedLen - self.length;
 				var overLen = forwardOnThisSeg;
-				var vec = self.points[index].sub(self.points[index-1]).normalize();
-				self.points[index-1] = self.points[index-1].add(vec.mul(overLen));
+				self.points[index-1].add(caculatePoint.mul(overLen / segmentLen),true);
 				for(var j=0;j<index-1;j++)
 				{
 					self.points.shift();

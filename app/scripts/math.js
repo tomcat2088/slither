@@ -3,6 +3,14 @@ module.exports = function Point(x,y)
 	var self = this;
 	self.x = x;
 	self.y = y;
+	self.assign = function(target)
+	{
+		target.x = self.x;
+		target.y = self.y;
+	}
+
+	
+
 	self.add = function(pt,addToSelf)
 	{
 		if(addToSelf)

@@ -10,6 +10,7 @@ module.exports = function Game()
 
 	self.slither = new Slither(); //self
 	self.otherSlithers = new Object();//other player's slithers
+	self.slitherAIs = new Array();
 
 	self.slitherMap = new Array();
 	this.server = new Server("",function(command,obj){
@@ -54,6 +55,12 @@ module.exports = function Game()
 		deltaTime /= 1000;
 
 		self.slither.update(deltaTime);
+
+		for(var key in self.slitherAIs)
+		{
+			self.slitherAIs[key].update(deltaTime);
+		}
+
 		self.server.sync(self.slither.serialize());
 
 		var lastPt = self.slither.points[self.slither.points.length - 1];
