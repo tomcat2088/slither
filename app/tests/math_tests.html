@@ -1,0 +1,45 @@
+<html>
+<head>
+	<script type="text/javascript" src="../scripts/math.js"></script>
+	<script type="text/javascript">
+		console.log("Hello Math");
+
+		var ctx ;
+		window.onload = function()
+		{
+		
+
+			ctx = document.getElementById("canvas").getContext('2d');
+			ctx.fillStyle = "#330000";
+			ctx.strokeStyle = "#330000";
+			ctx.fillRect(200,30,10,10);
+			ctx.beginPath();
+			ctx.moveTo(100,100);
+			ctx.lineTo(200,200);
+			ctx.stroke();
+		}
+
+
+		window.addEventListener("mousemove",function(e){
+			var pt = new Point(e.clientX,e.clientY);
+			var lineBegin = new Point(100,100);
+			var lineEnd = new Point(200,200);
+			console.log(pt.pointToLineDistance(pt,lineBegin,lineEnd));
+			ctx.clearRect(0,0,100,100);
+			ctx.fillText(pt.y + "",10,10);
+		});
+
+		var lineVec = new Point();
+		function pointsAlongLine(pts)
+		{
+			for(var i=0;i<pts.length - 1;i++)
+			{
+				
+			}
+		}
+	</script>
+</head>
+<body>
+	<canvas id="canvas" width="800" height="600"></canvas>
+</body>
+</html>

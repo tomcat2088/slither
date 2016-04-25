@@ -1,4 +1,5 @@
-module.exports = function Point(x,y)
+var xVec = new Point(1,0);
+function Point(x,y)
 {
 	var self = this;
 	self.x = x;
@@ -84,4 +85,38 @@ module.exports = function Point(x,y)
 		else
 			return new Point(x,y);
 	}
+
+	self.rotate = function(fromVec,toVec,addToSelf)
+	{
+		//fromVec x,y
+		//toVec x',y'
+		var sin = (fromVec.x * toVec.y - fromVec.y * toVec.x) / (fromVec.x * fromVec.x + fromVec.y * fromVec.y);
+		var cos = toVec.x/fromVec.x + fromVec.y/fromVec.x * sin;
+
+		var newX = self.x * cos - self.y * sin;
+		var newY = self.x * sin + self.y * cos;
+
+		if(addToSelf)
+		{
+			self.x = newX;
+			self.y = newY;
+			return;
+		}
+		return new Point(newX,newY);
+	}
+
+	self.pointToLineDistance = function(pt,lineBegin,lineEnd)
+	{
+		pt.x -= lineBegin.x;
+		pt.y -= lineBegin.y;
+		lineEnd.x -= lineBegin.x;
+		lineEnd.y -= lineBegin.y;
+		lineBegin.x = 0;
+		lineBegin.y = 0;
+
+		lineEnd.normalize(true);
+		pt.rotate(lineEnd,xVec,true);
+		return Math.abs(pt.y);
+	}
 }
+module.exports = Point;

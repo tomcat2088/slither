@@ -77,4 +77,27 @@ module.exports = function Game()
 			}
 		}
 	};
+
+	function checkSlitherCollide()
+	{
+		for(var key in self.slitherAIs)
+		{
+			dieTest(self.slither,self.slitherAIs[key]);
+		}
+		for(var key in self.otherSlithers)
+		{
+			dieTest(self.slither,self.otherSlithers[key]);
+		}	
+	}
+
+	function dieTest(slither1,slither2)
+	{
+		var dieSlither = slither1.dieTest(slither2);
+		if(dieSlither)
+		{
+			dieSlither.die();
+			if(dieSlither.uid)
+				self.server.kill(dieSlither.uid);	
+		}
+	}
 }

@@ -13,17 +13,46 @@ module.exports = function SlitherAI(gameRender)
 
 
 	var thinkDelay = 5;
+	var targetFoodUid;
+
 	this.update = function(deltaTime)
 	{
 		thinkDelay -= deltaTime;
 		if(thinkDelay <= 0)
 		{
 			thinkDelay = 5;
-			
-			var randomDegree = Math.random() * 360;
-			self.slither.direction.x = Math.cos(randomDegree / 180.0 * 3.14);
-			self.slither.direction.y = Math.sin(randomDegree / 180.0 * 3.14);
+
+			nearestFood();
+
+			if(window.game.slitherMap[targetFoodUid])
+			{
+				var food = window.game.slitherMap[targetFoodUid];
+				self.slither.direction.x = food.x - self.slither.points[self.slither.points.length - 1].x;
+				self.slither.direction.y = food.y - self.slither.points[self.slither.points.length - 1].y;
+				self.slither.direction.normalize(true);
+			}
 		}
 		self.slither.update(deltaTime);
+	}
+
+
+	var nearestFoodPoint = new Point();
+	function nearestFood()
+	{
+		var foods = window.game.slitherMap;
+		
+		var distance = 100000000;
+		for(var key in foods)
+		{
+			nearestFoodPoint.x = foods[key].x;
+			nearestFoodPoint.y = foods[key].y;
+			nearestFoodPoint.sub(self.slither.points[self.slither.points.length - 1],true);
+			var newLen = nearestFoodPoint.len();
+			if(newLen < distance)
+			{
+				distance = newLen;
+				targetFoodUid = key;
+			}
+		}
 	}
 }

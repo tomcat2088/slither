@@ -8,6 +8,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 	self.Server_Command_Logout = 10003;
 	self.Server_Command_Map = 10004;
 	self.Server_Command_CatchProp = 10005;
+	self.Server_Command_Kill = 10006;
 
 	self.commandCallBack = commandCallBack;
 
@@ -45,6 +46,11 @@ module.exports = function Server(serverUrl,commandCallBack)
 	this.catchProp = function(uid)
 	{
 		sendCommand(self.Server_Command_CatchProp,uid);	
+	}
+
+	this.kill = function(uid)
+	{
+		sendCommand(self.Server_Command_Kill,uid);
 	}
 
 	//process response

@@ -11,6 +11,11 @@ module.exports = function Slither()
 	self.speed = 280;
 	self.direction = (new Point(2,2)).normalize();
 
+	self.turnToDirection = function(direction)
+	{
+			
+	}
+
 	this.serialize = function()
 	{
 		var obj = new Object();
@@ -37,6 +42,37 @@ module.exports = function Slither()
 	{
 		forwardDistance = updateHead(deltaTime);
 		updateTail(deltaTime,forwardDistance);
+	}
+
+	var dieTestHead;
+	this.dieTest = function(slither)
+	{
+		for(var i = 0;i < slither.points.length - 1;i++)
+		{
+			head().assign(dieTestHead);
+			var distance = dieTestHead.pointToLineDistance(dieTestHead,slither.points[i],slither.points[i + 1]);
+			if(distance < slither.width / 2 + self.width / 2)
+			{
+				//i die
+				return self;
+			}
+		}
+
+		for(var i = 0;i < self.points.length - 1;i++)
+		{
+			slither.points[slither.points.length - 1].assign(dieTestHead);
+			var distance = dieTestHead.pointToLineDistance(dieTestHead,self.points[i],self.points[i + 1]);
+			if(distance < slither.width / 2 + self.width / 2)
+			{
+				//u die
+				return slither;
+			}
+		}
+	}
+
+	this.die = function()
+	{
+		self.dead = true;
 	}
 
 	//Head
