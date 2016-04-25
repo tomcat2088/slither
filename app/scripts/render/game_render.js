@@ -75,7 +75,10 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 		self.context.fillRect(0,0,20,20);
 		for(var key in self.registeredRenders)
 		{
-			self.registeredRenders[key].update(delta,self);
+			if(self.registeredRenders[key].invalid)
+				delete self.registeredRenders[key];
+			else
+				self.registeredRenders[key].update(delta,self);
 		}
 
 		self.context.restore();

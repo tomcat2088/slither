@@ -43,6 +43,8 @@ def login(data,websocket):
 async def sync(uid,data):
 	ret = result(0,Command_Sync,uid,data)
 	for key in sockets:
+		if uid == key:
+			continue
 		await sockets[key].send(json.dumps(ret))
 
 async def send_map(uid):

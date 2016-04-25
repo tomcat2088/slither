@@ -28,3 +28,17 @@ window.addEventListener('mousemove',function(e){
 	direction = direction.normalize();
 	game.slither.direction = direction;
 });
+
+window.addEventListener('keydown',function(e){
+	if(e.keyCode == 32)
+	{
+		game.slither.speed = 200; 
+	}
+});
+
+window.addEventListener('keyup',function(e){
+	if(e.keyCode == 32)
+	{
+		game.slither.speed = 100;
+	}
+});

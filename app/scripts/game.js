@@ -1,8 +1,10 @@
 var Slither = require("./slither.js");
-var Server = require("./server.js");
+//var Server = require("./server.js");
+var Server = require("./virtual_server.js");
 var Point = require("./math.js");
 var SlitherRender = require("./render/slither_render.js");
 var SlitherMapRender = require("./render/slither_map_render.js");
+var SlitherAI = require("./slither_ai.js");
 module.exports = function Game()
 {
 	var self = this;
@@ -59,24 +61,36 @@ module.exports = function Game()
 		for(var key in self.slitherAIs)
 		{
 			self.slitherAIs[key].update(deltaTime);
+			checkSlitherEatFood(self.slitherAIs[key].slither);
+			dieTest(self.slither,self.slitherAIs[key].slither);
+
+			if(self.slitherAIs[key].slither.dead)
+			{
+				delete self.slitherAIs[key];
+			}
 		}
 
 		self.server.sync(self.slither.serialize());
 
-		var lastPt = self.slither.points[self.slither.points.length - 1];
+		checkSlitherEatFood(self.slither);
 
+	}
+
+	function checkSlitherEatFood(slither)
+	{
+		var lastPt = slither.points[slither.points.length - 1];
 		for(var prop in self.slitherMap)
 		{
 			var mapUnit = self.slitherMap[prop];
 			var point = new Point(mapUnit.x,mapUnit.y);
-			if(point.sub(lastPt).len() <= self.slither.width && 
+			if(point.sub(lastPt).len() <= slither.width && 
 				prop.isCatched == undefined)
 			{
 				self.server.catchProp(prop);
 				prop.isCatched = true;
 			}
 		}
-	};
+	}
 
 	function checkSlitherCollide()
 	{
@@ -96,8 +110,12 @@ module.exports = function Game()
 		if(dieSlither)
 		{
 			dieSlither.die();
-			if(dieSlither.uid)
-				self.server.kill(dieSlither.uid);	
+			console.log(dieSlither + " die");
+			if(dieSlither != self.slither)
+			{
+				self.server.kill(dieSlither);
+				self.slitherAIs.push(new SlitherAI(window.gameRender));
+			}	
 		}
 	}
 }

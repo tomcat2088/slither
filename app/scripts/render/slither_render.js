@@ -9,21 +9,10 @@ module.exports = function SlitherRender(slither)
 	img.src = "static/circle_mask.png";
 	this.update = function(deltaTime,gameRender)
 	{
+		if(self.slither.dead)
+			self.invalid = true;
 		var context = gameRender.context;
 		var points = self.slither.points;
-		//drawCirclesOnLine(points,context,slither);
-		// context.lineWidth = self.slither.width;
-		// context.strokeStyle = self.slither.color;
-		// context.lineCap="round";
-		// context.beginPath();
-		// for(var key in points)
-		// {
-		// 	if(parseInt(key) == 0)
-		// 		context.moveTo(points[key].x,points[key].y);
-		// 	else
-		// 		context.lineTo(points[key].x,points[key].y);
-		// }
-		// context.stroke();
 		drawCirclesOnLine(points,context,self.slither);
 		context.lineWidth = 1;
 		context.strokeStyle = "#fff";

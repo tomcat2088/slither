@@ -1,18 +1,19 @@
 var Slither = require("./slither.js");
 var SlitherRender = require("./render/slither_render.js");
 var GameRender = require("./render/game_render.js");
+var Point = require("./math.js");
 module.exports = function SlitherAI(gameRender)
 {
 	var self = this;
-	self.slither = new Slither();
+	self.slither = new Slither(200,100);
 	self.slither.color = "#2222ff";
 	// self.slither.width = 15;
-	self.slither.length = 1000;
-	self.slither.speed = 300;
+	self.slither.length = 300;
+	self.slither.speed = 170;
 	gameRender.registerRender(new SlitherRender(self.slither));
 
 
-	var thinkDelay = 5;
+	var thinkDelay = 1;
 	var targetFoodUid;
 
 	this.update = function(deltaTime)
@@ -20,7 +21,7 @@ module.exports = function SlitherAI(gameRender)
 		thinkDelay -= deltaTime;
 		if(thinkDelay <= 0)
 		{
-			thinkDelay = 5;
+			thinkDelay = 1;
 
 			nearestFood();
 

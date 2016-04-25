@@ -1,14 +1,18 @@
 var Point = require("./math.js");
 
-module.exports = function Slither()
+module.exports = function Slither(xLoc,yLoc)
 {
+	if(!xLoc)
+		xLoc = 0;
+	if(!yLoc)
+		yLoc = 0;
 	var self = this;
-	self.length = 9000;
-	self.width = 40;
-	self.points = [new Point(0,-250),new Point(0,0)];
+	self.length = 200;
+	self.width = 20;
+	self.points = [new Point(xLoc,yLoc-200),new Point(xLoc,yLoc)];
 	self.color = '#ff3300';
 
-	self.speed = 280;
+	self.speed = 90;
 	self.direction = (new Point(2,2)).normalize();
 
 	self.turnToDirection = function(direction)
@@ -44,14 +48,19 @@ module.exports = function Slither()
 		updateTail(deltaTime,forwardDistance);
 	}
 
-	var dieTestHead;
+	var dieTestHead = new Point();
+	var dieTestLineBegin = new Point();
+	var dieTestLineEnd = new Point();
 	this.dieTest = function(slither)
 	{
 		for(var i = 0;i < slither.points.length - 1;i++)
 		{
 			head().assign(dieTestHead);
-			var distance = dieTestHead.pointToLineDistance(dieTestHead,slither.points[i],slither.points[i + 1]);
-			if(distance < slither.width / 2 + self.width / 2)
+			slither.points[i].assign(dieTestLineBegin);
+			slither.points[i + 1].assign(dieTestLineEnd);
+
+			var distance = dieTestHead.pointToLineDistance(dieTestHead,dieTestLineBegin,dieTestLineEnd);
+			if(distance >=0 && distance < slither.width / 2 + self.width / 2)
 			{
 				//i die
 				return self;
@@ -61,8 +70,10 @@ module.exports = function Slither()
 		for(var i = 0;i < self.points.length - 1;i++)
 		{
 			slither.points[slither.points.length - 1].assign(dieTestHead);
-			var distance = dieTestHead.pointToLineDistance(dieTestHead,self.points[i],self.points[i + 1]);
-			if(distance < slither.width / 2 + self.width / 2)
+			self.points[i].assign(dieTestLineBegin);
+			self.points[i + 1].assign(dieTestLineEnd);
+			var distance = dieTestHead.pointToLineDistance(dieTestHead,dieTestLineBegin,dieTestLineEnd);
+			if(distance >=0 && distance < slither.width / 2 + self.width / 2)
 			{
 				//u die
 				return slither;
