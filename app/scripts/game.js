@@ -8,8 +8,8 @@ var SlitherAI = require("./slither_ai.js");
 module.exports = function Game()
 {
 	var self = this;
-	var loginUser = null;
 
+	var loginUser = null;
 	self.slither = new Slither(); //self
 	self.otherSlithers = new Object();//other player's slithers
 	self.slitherAIs = new Array();

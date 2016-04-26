@@ -7,6 +7,8 @@ module.exports = function Slither(xLoc,yLoc)
 	if(!yLoc)
 		yLoc = 0;
 	var self = this;
+	self.nickname = "";
+	self.uid = "";
 	self.length = 200;
 	self.width = 20;
 	self.points = [new Point(xLoc,yLoc-200),new Point(xLoc,yLoc)];
