@@ -48,7 +48,7 @@ module.exports = function Server(serverUrl,commandCallBack)
 		sendCommand(self.Server_Command_CatchProp,uid);	
 	}
 
-	this.kill = function(slither)
+	this.kill = function(uid)
 	{
 		sendCommand(self.Server_Command_Kill,uid);
 	}

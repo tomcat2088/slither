@@ -9,8 +9,8 @@ module.exports = function Game()
 {
 	var self = this;
 
-	var loginUser = null;
-	self.slither = new Slither(); //self
+	self.slither = null; //self
+
 	self.otherSlithers = new Object();//other player's slithers
 	self.slitherAIs = new Array();
 

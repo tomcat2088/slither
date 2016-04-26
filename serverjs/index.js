@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 var WebSocketServer = require('websocket').server;
 var http = require('http');
  
@@ -26,6 +27,8 @@ function originIsAllowed(origin) {
   // put logic here to detect whether the specified origin is allowed. 
   return true;
 }
+
+var clients = new Object();
  
 wsServer.on('request', function(request) {
     if (!originIsAllowed(request.origin)) {
