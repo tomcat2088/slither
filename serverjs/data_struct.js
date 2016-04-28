@@ -24,10 +24,15 @@ function SitherData(binaryData)
 		return JSON.stringify(self);
 	}
 
+	this.parse = function(data)
+	{
+		self.points = data.points;
+	}
+
 	function applyBinaryData(binaryData)
 	{
 		console.log(JSON.parse(binaryData));
 	}
 }
 
-module.exports = {"SitherData":SitherData};
+module.exports = {SitherData:SitherData};

@@ -1,29 +1,46 @@
 <html>
 <head>
-	<script type="text/javascript" src="../server.js"></script>
+	<script type="text/javascript" src="/js/server.js"></script>
 	<script type="text/javascript">
 		var map;
-		var server = new Server("",function(command,obj){
-			console.log(command + ":" + JSON.stringify(obj));
-			if(command == Server_Command_Login)
+		var slither;
+		var server = new Server("",function(command,data){
+			console.log(data);
+			if(command == server.Server_Command_Login)
 			{
+				slither = data;
 				server.loadMap();
+				console.log("login");
 			}
-			else if(command == Server_Command_Map)
+			else if(command == server.Server_Command_SyncSlither)
 			{
-				map = obj.data;
-				for(var key in map)
-				{
-					server.catchProp(key);
-				}
+				slither = data;
+				console.log("sync");
 			}
-			else if(command == Server_Command_CatchProp)
+			else if(command == server.Server_Command_Map)
 			{
-				delete map[obj.data.uid];
+				console.log("load map");
+				map = data;
+			}
+			else if(command == server.Server_Command_Kill)
+			{
+				console.log("kill"+ JSON.stringify(data));
+			}
+			else if(command == server.Server_Command_EatFood)
+			{
+				console.log("eat food complete");
+				delete map[data];
 			}
 		});
 		server.login("ocean");
 		
+
+		function echoTest()
+		{
+			setInterval(function(){
+				server.syncSlither(slither);
+			}, 2000);
+		}
 	</script>
 </head>
 </html>

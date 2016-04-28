@@ -1,26 +1,24 @@
-module.exports = function Server(serverUrl,commandCallBack)
+function Server(serverUrl,commandCallBack)
 {
 	var self = this;
 
 	self.Server_Command_Login = 10000;
-	self.Server_Command_Sync = 10001;
-	self.Server_Command_Message = 10002;
-	self.Server_Command_Logout = 10003;
-	self.Server_Command_Map = 10004;
-	self.Server_Command_CatchProp = 10005;
-	self.Server_Command_Kill = 10006;
+	self.Server_Command_SyncSlither = 10001;
+	self.Server_Command_Map = 10002;
+	self.Server_Command_Kill = 10003;
+	self.Server_Command_EatFood = 10004;
+	self.Server_Command_Logout = 10005;
 
 	self.commandCallBack = commandCallBack;
 
 	self.avaliable = false;
-	self.loginUser = null;
 
 	var websocket;
 	this.login = function(nickname)
 	{
 		if(websocket)
 			return;
-		websocket = new WebSocket("ws://localhost:8765");//serverUrl
+		websocket = new WebSocket("ws://localhost:8080","slither");//serverUrl
 		websocket.onopen = function(e)
 		{
 			console.log("Connect success!!! Begin login...");
@@ -33,58 +31,24 @@ module.exports = function Server(serverUrl,commandCallBack)
 		}
 	}
 
-	this.sync = function(data)
-	{
-		sendCommand(self.Server_Command_Sync,data);	
-	}
-
 	this.loadMap = function()
 	{
 		sendCommand(self.Server_Command_Map,"");	
 	}
 
-	this.catchProp = function(uid)
+	this.syncSlither = function(slither)
 	{
-		sendCommand(self.Server_Command_CatchProp,uid);	
+		sendCommand(self.Server_Command_SyncSlither,slither);	
+	}
+
+	this.eatFood = function(uid)
+	{
+		sendCommand(self.Server_Command_EatFood,uid);	
 	}
 
 	this.kill = function(uid)
 	{
 		sendCommand(self.Server_Command_Kill,uid);
-	}
-
-	//process response
-	function loginResponse(obj)
-	{
-		console.log("Login Success > " + obj.data.uid);
-		self.loginUser = obj.data;
-		if(self.commandCallBack)
-		{
-			self.commandCallBack(self.Server_Command_Login,obj);
-		}
-	}
-
-	function syncResponse(obj)
-	{
-		if(self.commandCallBack)
-		{
-			self.commandCallBack(self.Server_Command_Sync,obj);
-		}
-	}
-
-	function logoutResponse(obj)
-	{
-		if(self.commandCallBack)
-		{
-			self.commandCallBack(self.Server_Command_Logout,obj);
-		}
-	}
-
-	function responseProcessMap()
-	{
-		return {10000:loginResponse,
-				10001:syncResponse,
-				10003:logoutResponse};
 	}
 
 	function processResponse(obj)
@@ -96,17 +60,9 @@ module.exports = function Server(serverUrl,commandCallBack)
 		}
 		else
 		{
-			var func = responseProcessMap()[obj.command];
-			if(func)
+			if(self.commandCallBack)
 			{
-				func(obj);
-			}
-			else
-			{
-				if(self.commandCallBack)
-				{
-					self.commandCallBack(obj.command,obj);
-				}
+				self.commandCallBack(obj.command,obj.data);
 			}
 		}
 	}
@@ -116,13 +72,10 @@ module.exports = function Server(serverUrl,commandCallBack)
 		if(websocket == null)
 			return;
 		var result = new Object();
-		if(command != self.Server_Command_Login)
-			if(self.loginUser)
-				result.uid = self.loginUser.uid;
-			else
-				return
 		result.command = command;
 		result.data = data;
 		websocket.send(JSON.stringify(result));
 	}
 }
+
+module.exports = Server;

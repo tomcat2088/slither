@@ -35,6 +35,10 @@ if __name__ == '__main__':
             'tools.staticdir.on': True,
             'tools.staticdir.dir': './build'
         },
+        '/js': {
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': './scripts'
+        },
         '/tests': {
             'tools.staticdir.on': True,
             'tools.staticdir.dir': './tests'

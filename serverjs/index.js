@@ -40,6 +40,6 @@ wsServer.on('request', function(request) {
       return;
     }
     
-    var connection = request.accept('echo-protocol', request.origin);
-    dispatchCenter.addClient(console);
+    var connection = request.accept('slither', request.origin);
+    dispatchCenter.addClient(connection);
 });

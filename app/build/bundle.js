@@ -9,9 +9,9 @@ var SlitherAI = require("./slither_ai.js");
 module.exports = function Game()
 {
 	var self = this;
-	var loginUser = null;
 
-	self.slither = new Slither(); //self
+	self.slither = null; //self
+
 	self.otherSlithers = new Object();//other player's slithers
 	self.slitherAIs = new Array();
 
@@ -518,6 +518,8 @@ module.exports = function Slither(xLoc,yLoc)
 	if(!yLoc)
 		yLoc = 0;
 	var self = this;
+	self.nickname = "";
+	self.uid = "";
 	self.length = 200;
 	self.width = 20;
 	self.points = [new Point(xLoc,yLoc-200),new Point(xLoc,yLoc)];
@@ -724,23 +726,27 @@ module.exports = function VirtualServer(url,commandCallBack)
 	self.Server_Command_Kill = 10006;
 
 	self.mapUnits = new Array();
-	self.loginUser = null;
 	self.slithers = new Object();
-	this.login = function(name)
+	this.login = function(nickname)
 	{
 		setTimeout(function(){
 			if(commandCallBack)
 			{
-				self.loginUser = {nickname:name,uid:"uid"};
-				commandCallBack(self.Server_Command_Login,self.loginUser);
+				//serve
+				var slither = new Slither();
+				slither.nickname = nickname;
+				slither.uid = (new Date()).getTime();
+				self.slithers[slither.uid] = slither;
+				commandCallBack(self.Server_Command_Login,slither);
 			}
 		},1000);
 	}
-	this.sync = function(data)
+
+	this.syncSlither = function(slither)
 	{
 		if(commandCallBack)
 		{
-			self.slithers[data.uid] = data;
+			self.slithers[slither.uid] = slither;
 			//commandCallBack(self.Server_Command_Sync,data);
 		}
 	}
@@ -757,20 +763,21 @@ module.exports = function VirtualServer(url,commandCallBack)
 					self.mapUnits[i] = {uid:i,x:Math.random() * 1000,y:Math.random() * 1000};
 				}
 			}
-			commandCallBack(self.Server_Command_Map,{data:self.mapUnits});
+			commandCallBack(self.Server_Command_Map,self.mapUnits);
 		}	
 	}
 
-	this.catchProp = function(uid)
+	this.catchProp = function(slitherUid,propUid)
 	{
-		if(self.mapUnits[uid])
+		if(self.mapUnits[propUid] && self.slither[slitherUid])
 		{
-			delete self.mapUnits[uid];
-			commandCallBack(self.Server_Command_CatchProp,{data:{uid:uid}});
+			//TODO: self.slither[slitherUid].catch(self.mapUnits[propUid]);
+			delete self.mapUnits[propUid];
+			commandCallBack(self.Server_Command_Sync,self.slither[slitherUid]);
 		}
 	}
 
-	this.kill = function(slither)
+	this.kill = function(slitherUid)
 	{
 		for(var key in slither.points)
 		{
