@@ -41,6 +41,11 @@ function DispatchCenter()
 			delete clients[uid];
 		}
 	}
+
+	this.client = function(uid)
+	{
+		return clients[uid];
+	}
 }
 
 var dispatchCenter = new DispatchCenter();

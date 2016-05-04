@@ -16,7 +16,7 @@ module.exports = function SlitherClient(connection,dispatcher)
 		}
 	});
 
-	var slither;
+	self.slither = null;
 
 	self.receive = function(command,data)
 	{
@@ -54,18 +54,18 @@ module.exports = function SlitherClient(connection,dispatcher)
 	self.login = function(data)
 	{
 		console.log("Begin login >>");
-		slither = new SlitherData();
-		slither.nickname = data.nickname;
-		slither.uid = self.uid;
+		self.slither = new SlitherData();
+		self.slither.nickname = data.nickname;
+		self.slither.uid = self.uid;
 
 		console.log("Slither Created >>");
-		self.dispatcher.dispatch(Commands.Login,slither);
+		self.send(Commands.Login,self.slither);
 	}
 
 	self.sync = function(data)
 	{
-		slither.parse(data);
-		self.dispatcher.dispatch(Commands.SyncSlither,slither);
+		self.slither.parse(data);
+		self.dispatcher.dispatch(Commands.SyncSlither,self.slither);
 	}
 
 	self.sendMap = function()
@@ -80,8 +80,8 @@ module.exports = function SlitherClient(connection,dispatcher)
 		var food = slitherMap.units[data];
 		if(food)
 		{
-			slither.length += food.size / 10;
-			self.send(Commands.SyncSlither,slither);
+			self.slither.length += food.size;
+			self.send(Commands.SyncSlither,self.slither);
 		}
 
 		self.dispatcher.dispatch(Commands.EatFood,data);
@@ -89,26 +89,35 @@ module.exports = function SlitherClient(connection,dispatcher)
 
 	self.kill = function(data)
 	{
-		console.log(slither.uid + " Kill >>>" + data);
+		console.log(self.slither.uid + " Kill >>>" + data);
 		self.dispatcher.dispatch(Commands.Kill,data);
-		self.dispatcher.dispatch(Commands.Map,slitherMap.units);
 
 		var killedClient = self.dispatcher.client(data);
+		if(!killedClient)
+			return;
 		var foods = killedClient.becomeFood();
 		for(var key in foods)
 		{
 			slitherMap.units[key] = foods[key];
 		}
 
+		self.dispatcher.dispatch(Commands.Map,slitherMap.units);
 		self.dispatcher.close(data);
 	}
 
 	self.becomeFood = function()
 	{
-		for(var pt in slither.points)
+		var i=0;
+		var units = new Object();
+		console.log(self.slither);
+		for(var key in self.slither.points)
 		{
-			var uid = uuid() + "" + i;
-			self.units[uid] = {x:x,y:y,uid:uid,size:size};
+			var pt = self.slither.points[key];
+			var uid = uuid() + i;
+			units[uid] = {x:pt.x,y:pt.y,uid:uid,size:3};
+			i++;
 		}
+
+		return units;
 	}
 }

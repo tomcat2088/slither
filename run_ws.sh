@@ -1,0 +1,2 @@
+cd serverjs
+./index.js

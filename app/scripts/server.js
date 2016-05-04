@@ -18,7 +18,7 @@ function Server(serverUrl,commandCallBack)
 	{
 		if(websocket)
 			return;
-		websocket = new WebSocket("ws://localhost:8080","slither");//serverUrl
+		websocket = new WebSocket("ws://localhost:8081",'slither');//serverUrl
 		websocket.onopen = function(e)
 		{
 			console.log("Connect success!!! Begin login...");

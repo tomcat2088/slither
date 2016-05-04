@@ -18,7 +18,7 @@ module.exports = function SlitherRender(slither)
 		context.strokeStyle = "#fff";
 		firstPt = points[points.length - 1];
 		var degree = self.slither.direction.y / self.slither.direction.x;
-		context.strokeText("name:" + Math.atan(degree)/3.14 * 180,firstPt.x,firstPt.y - 5);
+		context.strokeText(self.slither.nickname + Math.atan(degree)/3.14 * 180,firstPt.x,firstPt.y - 5);
 	}
 
 

@@ -1,15 +1,27 @@
 var Slither = require("./slither.js");
-//var Server = require("./server.js");
-var Server = require("./virtual_server.js");
+var Server = require("./server.js");
+//var Server = require("./virtual_server.js");
 var Point = require("./math.js");
 var SlitherRender = require("./render/slither_render.js");
 var SlitherMapRender = require("./render/slither_map_render.js");
 var SlitherAI = require("./slither_ai.js");
-module.exports = function Game()
+module.exports = function Game(gameRender)
 {
 	var self = this;
-
 	self.slither = null; //self
+
+	self.gameRender = gameRender;
+	self.gameRender.focusCallback = function()
+	{
+		if(self.slither)
+		{
+			var pt = self.slither.points[self.slither.points.length - 1];
+			return pt;
+		}
+		return new Point(0,0);
+	}
+
+	
 
 	self.otherSlithers = new Object();//other player's slithers
 	self.slitherAIs = new Array();
@@ -18,59 +30,99 @@ module.exports = function Game()
 	this.server = new Server("",function(command,obj){
 		if(command == self.server.Server_Command_Login)
 		{
-			loginUser = obj.data;
+			self.slither = new Slither(0,0);
+			self.slither.deserialize(obj);
+			self.gameRender.registerRender(new SlitherRender(self.slither));
+			self.begin();
+			
 			self.server.loadMap();
 		}
-		else if(command == self.server.Server_Command_Sync)
+		else if(command == self.server.Server_Command_SyncSlither)
 		{
-			if(obj.uid == self.server.loginUser.uid)
+			if(self.slither && obj.uid == self.slither.uid)
 			{
-				self.slither.deserialize(obj.data);
+				self.slither.deserialize(obj);
 				return;
 			}
 			if(!self.otherSlithers[obj.uid])
 			{
 				self.otherSlithers[obj.uid] = new Slither();
-				window.gameRender.registerRender(new SlitherRender(self.otherSlithers[obj.uid]),obj.uid);
+				self.gameRender.registerRender(new SlitherRender(self.otherSlithers[obj.uid]),obj.uid);
 			}
-			self.otherSlithers[obj.uid].deserialize(obj.data);
+			self.otherSlithers[obj.uid].deserialize(obj);
 				
 		}
 		else if(command == self.server.Server_Command_Map)
 		{
-			self.slitherMap = obj.data;
-			window.gameRender.registerRender(new SlitherMapRender(self.slitherMap));
+			self.slitherMap = obj;
+			if(self.gameRender.isRenderRegistered("SlitherMap") == false)
+				self.gameRender.registerRender(new SlitherMapRender(self.slitherMap),"SlitherMap");
+			else
+			{
+				self.gameRender.registeredRender("SlitherMap").map = obj;
+			}
 		}
-		else if(command == self.server.Server_Command_CatchProp)
+		else if(command == self.server.Server_Command_EatFood)
 		{
-			delete self.slitherMap[obj.data.uid];
+			delete self.slitherMap[obj];
 		}
 		else if(command == self.server.Server_Command_Logout)
 		{
-			delete self.otherSlithers[obj.uid];
+			delete self.otherSlithers[obj];
+			self.gameRender.unregisterRender(obj);
+		}
+		else if(command == self.server.Server_Command_Kill)
+		{
+			if(obj == self.slither.uid)
+			{
+				self.end();
+				self.slither = null;
+				self.otherSlithers = new Object();
+				document.location = document.location.href;
+			}
 		}
 	});
-	this.server.login("ocean");
+	this.server.login("ocean" + Math.random() * 10);
+
+	this.updateHandler = 0;
+	this.begin = function()
+	{
+		self.gameRender.isRunning = true;
+		self.updateHandler = setInterval(function(){
+			window.game.update(1000/30);
+		}, 1000/30);
+	}
+
+	this.end = function()
+	{
+		self.gameRender.isRunning = false;
+		clearInterval(self.updateHandler);
+	}
 
 	this.update = function(deltaTime)
 	{
 		deltaTime /= 1000;
+		if(self.slither == null)
+			return;
 
 		self.slither.update(deltaTime);
 
-		for(var key in self.slitherAIs)
-		{
-			self.slitherAIs[key].update(deltaTime);
-			checkSlitherEatFood(self.slitherAIs[key].slither);
-			dieTest(self.slither,self.slitherAIs[key].slither);
+		// for(var key in self.slitherAIs)
+		// {
+		// 	self.slitherAIs[key].update(deltaTime);
+		// 	checkSlitherEatFood(self.slitherAIs[key].slither);
+		// 	dieTest(self.slither,self.slitherAIs[key].slither);
 
-			if(self.slitherAIs[key].slither.dead)
-			{
-				delete self.slitherAIs[key];
-			}
-		}
+		// 	if(self.slitherAIs[key].slither.dead)
+		// 	{
+		// 		delete self.slitherAIs[key];
+		// 	}
+		// }
 
-		self.server.sync(self.slither.serialize());
+		checkSlithersEatFood();
+		checkSlitherCollide();
+
+		self.server.syncSlither(self.slither.serialize());
 
 		checkSlitherEatFood(self.slither);
 
@@ -86,10 +138,22 @@ module.exports = function Game()
 			if(point.sub(lastPt).len() <= slither.width && 
 				prop.isCatched == undefined)
 			{
-				self.server.catchProp(prop);
+				self.server.eatFood(prop);
 				prop.isCatched = true;
 			}
 		}
+	}
+
+	function checkSlithersEatFood()
+	{
+		for(var key in self.slitherAIs)
+		{
+			checkSlitherEatFood(self.slitherAIs[key].slither);
+		}
+		for(var key in self.otherSlithers)
+		{
+			checkSlitherEatFood(self.otherSlithers[key]);
+		}	
 	}
 
 	function checkSlitherCollide()
@@ -113,8 +177,8 @@ module.exports = function Game()
 			console.log(dieSlither + " die");
 			if(dieSlither != self.slither)
 			{
-				self.server.kill(dieSlither);
-				self.slitherAIs.push(new SlitherAI(window.gameRender));
+				self.server.kill(dieSlither.uid);
+				//self.slitherAIs.push(new SlitherAI(window.gameRender));
 			}	
 		}
 	}

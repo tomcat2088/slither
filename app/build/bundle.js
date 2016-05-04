@@ -1,16 +1,28 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var Slither = require("./slither.js");
-//var Server = require("./server.js");
-var Server = require("./virtual_server.js");
+var Server = require("./server.js");
+//var Server = require("./virtual_server.js");
 var Point = require("./math.js");
 var SlitherRender = require("./render/slither_render.js");
 var SlitherMapRender = require("./render/slither_map_render.js");
 var SlitherAI = require("./slither_ai.js");
-module.exports = function Game()
+module.exports = function Game(gameRender)
 {
 	var self = this;
-
 	self.slither = null; //self
+
+	self.gameRender = gameRender;
+	self.gameRender.focusCallback = function()
+	{
+		if(self.slither)
+		{
+			var pt = self.slither.points[self.slither.points.length - 1];
+			return pt;
+		}
+		return new Point(0,0);
+	}
+
+	
 
 	self.otherSlithers = new Object();//other player's slithers
 	self.slitherAIs = new Array();
@@ -19,59 +31,99 @@ module.exports = function Game()
 	this.server = new Server("",function(command,obj){
 		if(command == self.server.Server_Command_Login)
 		{
-			loginUser = obj.data;
+			self.slither = new Slither(0,0);
+			self.slither.deserialize(obj);
+			self.gameRender.registerRender(new SlitherRender(self.slither));
+			self.begin();
+			
 			self.server.loadMap();
 		}
-		else if(command == self.server.Server_Command_Sync)
+		else if(command == self.server.Server_Command_SyncSlither)
 		{
-			if(obj.uid == self.server.loginUser.uid)
+			if(self.slither && obj.uid == self.slither.uid)
 			{
-				self.slither.deserialize(obj.data);
+				self.slither.deserialize(obj);
 				return;
 			}
 			if(!self.otherSlithers[obj.uid])
 			{
 				self.otherSlithers[obj.uid] = new Slither();
-				window.gameRender.registerRender(new SlitherRender(self.otherSlithers[obj.uid]),obj.uid);
+				self.gameRender.registerRender(new SlitherRender(self.otherSlithers[obj.uid]),obj.uid);
 			}
-			self.otherSlithers[obj.uid].deserialize(obj.data);
+			self.otherSlithers[obj.uid].deserialize(obj);
 				
 		}
 		else if(command == self.server.Server_Command_Map)
 		{
-			self.slitherMap = obj.data;
-			window.gameRender.registerRender(new SlitherMapRender(self.slitherMap));
+			self.slitherMap = obj;
+			if(self.gameRender.isRenderRegistered("SlitherMap") == false)
+				self.gameRender.registerRender(new SlitherMapRender(self.slitherMap),"SlitherMap");
+			else
+			{
+				self.gameRender.registeredRender("SlitherMap").map = obj;
+			}
 		}
-		else if(command == self.server.Server_Command_CatchProp)
+		else if(command == self.server.Server_Command_EatFood)
 		{
-			delete self.slitherMap[obj.data.uid];
+			delete self.slitherMap[obj];
 		}
 		else if(command == self.server.Server_Command_Logout)
 		{
-			delete self.otherSlithers[obj.uid];
+			delete self.otherSlithers[obj];
+			self.gameRender.unregisterRender(obj);
+		}
+		else if(command == self.server.Server_Command_Kill)
+		{
+			if(obj == self.slither.uid)
+			{
+				self.end();
+				self.slither = null;
+				self.otherSlithers = new Object();
+				document.location = document.location.href;
+			}
 		}
 	});
-	this.server.login("ocean");
+	this.server.login("ocean" + Math.random() * 10);
+
+	this.updateHandler = 0;
+	this.begin = function()
+	{
+		self.gameRender.isRunning = true;
+		self.updateHandler = setInterval(function(){
+			window.game.update(1000/30);
+		}, 1000/30);
+	}
+
+	this.end = function()
+	{
+		self.gameRender.isRunning = false;
+		clearInterval(self.updateHandler);
+	}
 
 	this.update = function(deltaTime)
 	{
 		deltaTime /= 1000;
+		if(self.slither == null)
+			return;
 
 		self.slither.update(deltaTime);
 
-		for(var key in self.slitherAIs)
-		{
-			self.slitherAIs[key].update(deltaTime);
-			checkSlitherEatFood(self.slitherAIs[key].slither);
-			dieTest(self.slither,self.slitherAIs[key].slither);
+		// for(var key in self.slitherAIs)
+		// {
+		// 	self.slitherAIs[key].update(deltaTime);
+		// 	checkSlitherEatFood(self.slitherAIs[key].slither);
+		// 	dieTest(self.slither,self.slitherAIs[key].slither);
 
-			if(self.slitherAIs[key].slither.dead)
-			{
-				delete self.slitherAIs[key];
-			}
-		}
+		// 	if(self.slitherAIs[key].slither.dead)
+		// 	{
+		// 		delete self.slitherAIs[key];
+		// 	}
+		// }
 
-		self.server.sync(self.slither.serialize());
+		checkSlithersEatFood();
+		checkSlitherCollide();
+
+		self.server.syncSlither(self.slither.serialize());
 
 		checkSlitherEatFood(self.slither);
 
@@ -87,10 +139,22 @@ module.exports = function Game()
 			if(point.sub(lastPt).len() <= slither.width && 
 				prop.isCatched == undefined)
 			{
-				self.server.catchProp(prop);
+				self.server.eatFood(prop);
 				prop.isCatched = true;
 			}
 		}
+	}
+
+	function checkSlithersEatFood()
+	{
+		for(var key in self.slitherAIs)
+		{
+			checkSlitherEatFood(self.slitherAIs[key].slither);
+		}
+		for(var key in self.otherSlithers)
+		{
+			checkSlitherEatFood(self.otherSlithers[key]);
+		}	
 	}
 
 	function checkSlitherCollide()
@@ -114,13 +178,13 @@ module.exports = function Game()
 			console.log(dieSlither + " die");
 			if(dieSlither != self.slither)
 			{
-				self.server.kill(dieSlither);
-				self.slitherAIs.push(new SlitherAI(window.gameRender));
+				self.server.kill(dieSlither.uid);
+				//self.slitherAIs.push(new SlitherAI(window.gameRender));
 			}	
 		}
 	}
 }
-},{"./math.js":3,"./render/slither_map_render.js":5,"./render/slither_render.js":6,"./slither.js":8,"./slither_ai.js":9,"./virtual_server.js":10}],2:[function(require,module,exports){
+},{"./math.js":3,"./render/slither_map_render.js":5,"./render/slither_render.js":6,"./server.js":8,"./slither.js":9,"./slither_ai.js":10}],2:[function(require,module,exports){
 var Game = require("./game.js");
 var Point = require("./math.js");
 var GameRender = require("./render/game_render.js");
@@ -128,31 +192,26 @@ var SlitherRender = require("./render/slither_render.js");
 var SlitherAI = require("./slither_ai.js");
 window.onload = function()
 {
-	window.game = new Game();
+	
 	window.gameRender = new GameRender('canvas',function(deltaTime){
 		
 	});
-	setInterval(function(){
-		window.game.update(1000/30);
-	}, 1000/30);
+	window.game = new Game(window.gameRender);
 
-	window.gameRender.registerRender(new SlitherRender(game.slither));
-	window.gameRender.focusCallback = function()
-	{
-		var pt = game.slither.points[game.slither.points.length - 1];
-		return pt;
-	}
-
-	game.slitherAIs.push(new SlitherAI(window.gameRender));
+	//game.slitherAIs.push(new SlitherAI(window.gameRender));
 }
 
 window.addEventListener('mousemove',function(e){
+	if(game.slither == null)
+		return;
 	direction = new Point(e.clientX - window.innerWidth/2,  e.clientY - window.innerHeight/2);
 	direction = direction.normalize();
 	game.slither.direction = direction;
 });
 
 window.addEventListener('keydown',function(e){
+	if(game.slither == null)
+		return;
 	if(e.keyCode == 32)
 	{
 		game.slither.speed = 200; 
@@ -160,12 +219,14 @@ window.addEventListener('keydown',function(e){
 });
 
 window.addEventListener('keyup',function(e){
+	if(game.slither == null)
+		return;
 	if(e.keyCode == 32)
 	{
 		game.slither.speed = 100;
 	}
 });
-},{"./game.js":1,"./math.js":3,"./render/game_render.js":4,"./render/slither_render.js":6,"./slither_ai.js":9}],3:[function(require,module,exports){
+},{"./game.js":1,"./math.js":3,"./render/game_render.js":4,"./render/slither_render.js":6,"./slither_ai.js":10}],3:[function(require,module,exports){
 var xVec = new Point(1,0);
 function Point(x,y)
 {
@@ -300,6 +361,7 @@ var textureManager = require("./texture_manager.js")
 var Point = require("../math.js")
 module.exports = function GameRender(canvasId,updateCallBack) {
 	var self = this;
+	self.isRunning = false;
 
 	var width = window.innerWidth;
 	var height = window.innerHeight;
@@ -310,12 +372,26 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 
 	this.registeredRenders = new Array();
 	this.mappedRenders = new Object();
+
+	this.registeredRender = function(uid)
+	{
+		return this.mappedRenders[uid];
+	}
+
 	this.registerRender = function(render,uid)
 	{
 		self.registeredRenders.push(render);
 		if(uid)
 		{
 			this.mappedRenders[uid] = render;
+		}
+	}
+
+	this.unregisterRender = function(uid)
+	{
+		if(this.mappedRenders[uid])
+		{
+			this.mappedRenders[uid].invalid = true;
 		}
 	}
 
@@ -334,6 +410,9 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 
 	var render = function () {
 		requestAnimationFrame( render );
+		if(self.isRunning == false)
+			return;
+
 		stats.begin();
 		var now = new Date();
 		var delta = (now - lastDate);
@@ -425,7 +504,7 @@ module.exports = function SlitherRender(slither)
 		context.strokeStyle = "#fff";
 		firstPt = points[points.length - 1];
 		var degree = self.slither.direction.y / self.slither.direction.x;
-		context.strokeText("name:" + Math.atan(degree)/3.14 * 180,firstPt.x,firstPt.y - 5);
+		context.strokeText(self.slither.nickname + Math.atan(degree)/3.14 * 180,firstPt.x,firstPt.y - 5);
 	}
 
 
@@ -509,9 +588,91 @@ function TextureManager()
 var manager = new TextureManager();
 module.exports = manager;
 },{}],8:[function(require,module,exports){
+function Server(serverUrl,commandCallBack)
+{
+	var self = this;
+
+	self.Server_Command_Login = 10000;
+	self.Server_Command_SyncSlither = 10001;
+	self.Server_Command_Map = 10002;
+	self.Server_Command_Kill = 10003;
+	self.Server_Command_EatFood = 10004;
+	self.Server_Command_Logout = 10005;
+
+	self.commandCallBack = commandCallBack;
+
+	self.avaliable = false;
+
+	var websocket;
+	this.login = function(nickname)
+	{
+		if(websocket)
+			return;
+		websocket = new WebSocket("ws://localhost:8081",'slither');//serverUrl
+		websocket.onopen = function(e)
+		{
+			console.log("Connect success!!! Begin login...");
+			sendCommand(self.Server_Command_Login,{'nickname':nickname});
+		}
+		websocket.onmessage = function(e)
+		{
+			var obj = JSON.parse(e.data);
+			processResponse(obj);
+		}
+	}
+
+	this.loadMap = function()
+	{
+		sendCommand(self.Server_Command_Map,"");	
+	}
+
+	this.syncSlither = function(slither)
+	{
+		sendCommand(self.Server_Command_SyncSlither,slither);	
+	}
+
+	this.eatFood = function(uid)
+	{
+		sendCommand(self.Server_Command_EatFood,uid);	
+	}
+
+	this.kill = function(uid)
+	{
+		sendCommand(self.Server_Command_Kill,uid);
+	}
+
+	function processResponse(obj)
+	{
+		if(obj.code != 0)
+		{
+			console.log("error:" + obj.data);
+			return;
+		}
+		else
+		{
+			if(self.commandCallBack)
+			{
+				self.commandCallBack(obj.command,obj.data);
+			}
+		}
+	}
+
+	function sendCommand(command,data)
+	{
+		if(websocket == null)
+			return;
+		var result = new Object();
+		result.command = command;
+		result.data = data;
+		websocket.send(JSON.stringify(result));
+	}
+}
+
+module.exports = Server;
+},{}],9:[function(require,module,exports){
 var Point = require("./math.js");
 
-module.exports = function Slither(xLoc,yLoc)
+module.exports = function Slither(xLoc,yLoc,data)
 {
 	if(!xLoc)
 		xLoc = 0;
@@ -552,6 +713,8 @@ module.exports = function Slither(xLoc,yLoc)
 		{
 			self.points.push(new Point(obj.points[key].x,obj.points[key].y));
 		}
+		self.uid = obj.uid;
+		self.nickname = obj.nickname;
 		self.color = obj.color;
 	}
 
@@ -651,7 +814,7 @@ module.exports = function Slither(xLoc,yLoc)
 	}
 
 }
-},{"./math.js":3}],9:[function(require,module,exports){
+},{"./math.js":3}],10:[function(require,module,exports){
 var Slither = require("./slither.js");
 var SlitherRender = require("./render/slither_render.js");
 var GameRender = require("./render/game_render.js");
@@ -711,81 +874,4 @@ module.exports = function SlitherAI(gameRender)
 		}
 	}
 }
-},{"./math.js":3,"./render/game_render.js":4,"./render/slither_render.js":6,"./slither.js":8}],10:[function(require,module,exports){
-module.exports = function VirtualServer(url,commandCallBack)
-{
-	//sync,eat food,kill slither,load map
-	var self = this;
-
-	self.Server_Command_Login = 10000;
-	self.Server_Command_Sync = 10001;
-	self.Server_Command_Message = 10002;
-	self.Server_Command_Logout = 10003;
-	self.Server_Command_Map = 10004;
-	self.Server_Command_CatchProp = 10005;
-	self.Server_Command_Kill = 10006;
-
-	self.mapUnits = new Array();
-	self.slithers = new Object();
-	this.login = function(nickname)
-	{
-		setTimeout(function(){
-			if(commandCallBack)
-			{
-				//serve
-				var slither = new Slither();
-				slither.nickname = nickname;
-				slither.uid = (new Date()).getTime();
-				self.slithers[slither.uid] = slither;
-				commandCallBack(self.Server_Command_Login,slither);
-			}
-		},1000);
-	}
-
-	this.syncSlither = function(slither)
-	{
-		if(commandCallBack)
-		{
-			self.slithers[slither.uid] = slither;
-			//commandCallBack(self.Server_Command_Sync,data);
-		}
-	}
-
-	this.loadMap = function()
-	{
-		if(commandCallBack)
-		{
-			if(self.mapUnits.length <= 0)
-			{
-				self.mapUnits = new Array();
-				for(var i=0;i<50;i++)
-				{
-					self.mapUnits[i] = {uid:i,x:Math.random() * 1000,y:Math.random() * 1000};
-				}
-			}
-			commandCallBack(self.Server_Command_Map,self.mapUnits);
-		}	
-	}
-
-	this.catchProp = function(slitherUid,propUid)
-	{
-		if(self.mapUnits[propUid] && self.slither[slitherUid])
-		{
-			//TODO: self.slither[slitherUid].catch(self.mapUnits[propUid]);
-			delete self.mapUnits[propUid];
-			commandCallBack(self.Server_Command_Sync,self.slither[slitherUid]);
-		}
-	}
-
-	this.kill = function(slitherUid)
-	{
-		for(var key in slither.points)
-		{
-			var pt = slither.points[key];
-			var uid = (new Date()).getTime() + "-" + key;
-			self.mapUnits[uid] = {uid:uid,x:pt.x,y:pt.y};
-		}
-		commandCallBack(self.Server_Command_Map,{data:self.mapUnits});
-	}
-}
-},{}]},{},[2]);
+},{"./math.js":3,"./render/game_render.js":4,"./render/slither_render.js":6,"./slither.js":9}]},{},[2]);

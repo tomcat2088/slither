@@ -2,7 +2,7 @@ var Point = require("./point.js");
 
 function SitherData(binaryData)
 {
-	var xLoc,yLoc;
+	var xLoc = 0,yLoc = 0;
 	var self = this;
 	self.nickname = "";
 	self.uid = "";

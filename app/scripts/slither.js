@@ -1,6 +1,6 @@
 var Point = require("./math.js");
 
-module.exports = function Slither(xLoc,yLoc)
+module.exports = function Slither(xLoc,yLoc,data)
 {
 	if(!xLoc)
 		xLoc = 0;
@@ -41,6 +41,8 @@ module.exports = function Slither(xLoc,yLoc)
 		{
 			self.points.push(new Point(obj.points[key].x,obj.points[key].y));
 		}
+		self.uid = obj.uid;
+		self.nickname = obj.nickname;
 		self.color = obj.color;
 	}
 
