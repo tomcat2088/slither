@@ -21,6 +21,17 @@ window.addEventListener('mousemove',function(e){
 	game.slither.direction = direction;
 });
 
+window.addEventListener('touchmove',function(e){
+	e = e.touches[0];
+	if(game.slither == null)
+		return;
+	direction = new Point(e.clientX - window.innerWidth/2,  e.clientY - window.innerHeight/2);
+	direction = direction.normalize();
+	game.slither.direction = direction;
+
+	e.preventDefault();
+});
+
 window.addEventListener('keydown',function(e){
 	if(game.slither == null)
 		return;

@@ -27,6 +27,7 @@ function SitherData(binaryData)
 	this.parse = function(data)
 	{
 		self.points = data.points;
+		self.width = parseInt(self.length / 60) + 20;
 	}
 
 	function applyBinaryData(binaryData)

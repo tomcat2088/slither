@@ -19,7 +19,57 @@ module.exports = function Slither(xLoc,yLoc,data)
 
 	self.turnToDirection = function(direction)
 	{
-			
+		self.targetDegree = self.directionToDegree(direction);
+	}
+
+	self.degreeToDirection = function(degree)
+	{
+		self.direction.x = Math.cos(degree / 180 * 3.14);
+		self.direction.y = -Math.sin(degree / 180 * 3.14);
+		return self.direction;
+	}
+
+	self.directionToDegree = function(direction)
+	{
+		var atan = direction.y / direction.x;
+		var degree = Math.atan(atan)/3.14 * 180;
+		var x = direction.x;
+		var y = direction.y;
+		if(x > 0)
+		{
+			if(y <= 0)
+			{
+				degree = -degree;
+			}
+			else
+			{
+				degree = 360 - degree;
+			}
+		}
+		else
+		{
+			if(y <= 0)
+			{
+				degree = 180 - degree;
+			}
+			else
+			{
+				degree = 180 - degree;
+			}
+		}
+		return degree;
+	}
+
+	self.targetDegree = self.directionToDegree(self.direction);
+
+	this.updateDirection = function(deltaTime)
+	{
+		var nowDegree = self.directionToDegree(self.direction);
+		if(Math.abs(self.targetDegree - nowDegree) > 0.0000001)
+		{
+			nowDegree += (self.targetDegree - nowDegree) / 4;
+		}
+		self.direction = self.degreeToDirection(nowDegree);
 	}
 
 	this.serialize = function()
@@ -48,6 +98,7 @@ module.exports = function Slither(xLoc,yLoc,data)
 
 	this.update = function(deltaTime)
 	{
+		//this.updateDirection(deltaTime);
 		forwardDistance = updateHead(deltaTime);
 		updateTail(deltaTime,forwardDistance);
 	}

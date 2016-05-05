@@ -17,8 +17,7 @@ module.exports = function SlitherRender(slither)
 		context.lineWidth = 1;
 		context.strokeStyle = "#fff";
 		firstPt = points[points.length - 1];
-		var degree = self.slither.direction.y / self.slither.direction.x;
-		context.strokeText(self.slither.nickname + Math.atan(degree)/3.14 * 180,firstPt.x,firstPt.y - 5);
+		context.strokeText("ocean:" + self.slither.targetDegree,firstPt.x,firstPt.y - 5);
 	}
 
 
@@ -39,6 +38,9 @@ module.exports = function SlitherRender(slither)
 
 		while(1)
 		{
+			//context.fillStyle = "#330000";
+			//context.fillRect(slither.points[pointSearchIndex].x,slither.points[pointSearchIndex].y,10,10);
+
 			slither.points[pointSearchIndex + 1].assign(caculatePoint);
 			caculatePoint.sub(slither.points[pointSearchIndex],true);
 
@@ -55,8 +57,6 @@ module.exports = function SlitherRender(slither)
 				drawPt.add(caculatePointNormalize,true);
 				drawLocationLen += radius / 2;
 				context.drawImage(img,drawPt.x,drawPt.y,radius * 2,radius * 2);
-				// context.fillStyle = "#333300";
-				// context.fillRect(drawPt.x,drawPt.y,radius * 2,radius * 2);
 			}
 			else
 			{

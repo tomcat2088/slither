@@ -208,6 +208,17 @@ window.addEventListener('mousemove',function(e){
 	game.slither.direction = direction;
 });
 
+window.addEventListener('touchmove',function(e){
+	e = e.touches[0];
+	if(game.slither == null)
+		return;
+	direction = new Point(e.clientX - window.innerWidth/2,  e.clientY - window.innerHeight/2);
+	direction = direction.normalize();
+	game.slither.direction = direction;
+
+	e.preventDefault();
+});
+
 window.addEventListener('keydown',function(e){
 	if(game.slither == null)
 		return;
@@ -502,8 +513,7 @@ module.exports = function SlitherRender(slither)
 		context.lineWidth = 1;
 		context.strokeStyle = "#fff";
 		firstPt = points[points.length - 1];
-		var degree = self.slither.direction.y / self.slither.direction.x;
-		context.strokeText(self.slither.nickname + Math.atan(degree)/3.14 * 180,firstPt.x,firstPt.y - 5);
+		context.strokeText("ocean:" + self.slither.targetDegree,firstPt.x,firstPt.y - 5);
 	}
 
 
@@ -524,6 +534,9 @@ module.exports = function SlitherRender(slither)
 
 		while(1)
 		{
+			//context.fillStyle = "#330000";
+			//context.fillRect(slither.points[pointSearchIndex].x,slither.points[pointSearchIndex].y,10,10);
+
 			slither.points[pointSearchIndex + 1].assign(caculatePoint);
 			caculatePoint.sub(slither.points[pointSearchIndex],true);
 
@@ -540,8 +553,6 @@ module.exports = function SlitherRender(slither)
 				drawPt.add(caculatePointNormalize,true);
 				drawLocationLen += radius / 2;
 				context.drawImage(img,drawPt.x,drawPt.y,radius * 2,radius * 2);
-				// context.fillStyle = "#333300";
-				// context.fillRect(drawPt.x,drawPt.y,radius * 2,radius * 2);
 			}
 			else
 			{
@@ -607,7 +618,7 @@ function Server(serverUrl,commandCallBack)
 	{
 		if(websocket)
 			return;
-		websocket = new WebSocket("ws://192.168.2.1:8081",'slither');//serverUrl
+		websocket = new WebSocket("ws://192.168.0.102:8081",'slither');//serverUrl
 		websocket.onopen = function(e)
 		{
 			console.log("Connect success!!! Begin login...");
@@ -690,7 +701,57 @@ module.exports = function Slither(xLoc,yLoc,data)
 
 	self.turnToDirection = function(direction)
 	{
-			
+		self.targetDegree = self.directionToDegree(direction);
+	}
+
+	self.degreeToDirection = function(degree)
+	{
+		self.direction.x = Math.cos(degree / 180 * 3.14);
+		self.direction.y = -Math.sin(degree / 180 * 3.14);
+		return self.direction;
+	}
+
+	self.directionToDegree = function(direction)
+	{
+		var atan = direction.y / direction.x;
+		var degree = Math.atan(atan)/3.14 * 180;
+		var x = direction.x;
+		var y = direction.y;
+		if(x > 0)
+		{
+			if(y <= 0)
+			{
+				degree = -degree;
+			}
+			else
+			{
+				degree = 360 - degree;
+			}
+		}
+		else
+		{
+			if(y <= 0)
+			{
+				degree = 180 - degree;
+			}
+			else
+			{
+				degree = 180 - degree;
+			}
+		}
+		return degree;
+	}
+
+	self.targetDegree = self.directionToDegree(self.direction);
+
+	this.updateDirection = function(deltaTime)
+	{
+		var nowDegree = self.directionToDegree(self.direction);
+		if(Math.abs(self.targetDegree - nowDegree) > 0.0000001)
+		{
+			nowDegree += (self.targetDegree - nowDegree) / 4;
+		}
+		self.direction = self.degreeToDirection(nowDegree);
 	}
 
 	this.serialize = function()
@@ -719,6 +780,7 @@ module.exports = function Slither(xLoc,yLoc,data)
 
 	this.update = function(deltaTime)
 	{
+		//this.updateDirection(deltaTime);
 		forwardDistance = updateHead(deltaTime);
 		updateTail(deltaTime,forwardDistance);
 	}
