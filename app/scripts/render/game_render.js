@@ -44,9 +44,9 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 	var lastDate = new Date();
 
 	//init fps counter
-	var stats = new Stats();
-	stats.showPanel( 1 );
-	document.body.appendChild( stats.dom );
+	//var stats = new Stats();
+	//stats.showPanel( 1 );
+	//document.body.appendChild( stats.dom );
 
 
 	var render = function () {
@@ -54,7 +54,7 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 		if(self.isRunning == false)
 			return;
 
-		stats.begin();
+		//stats.begin();
 		var now = new Date();
 		var delta = (now - lastDate);
 		lastDate = now;
@@ -103,7 +103,7 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 		if(updateCallBack)
 			updateCallBack(delta,self);
 
-		stats.end();
+		//stats.end();
 	};
 	render();
 }

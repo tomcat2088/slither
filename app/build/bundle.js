@@ -192,7 +192,6 @@ var SlitherRender = require("./render/slither_render.js");
 var SlitherAI = require("./slither_ai.js");
 window.onload = function()
 {
-	
 	window.gameRender = new GameRender('canvas',function(deltaTime){
 		
 	});
@@ -293,7 +292,7 @@ function Point(x,y)
 
 	self.equal = function(pt)
 	{
-		if(self.x == pt.x && self.y == pt.y)
+		if(Math.abs(self.x - pt.x) < 0.00000001 && Math.abs(self.y - pt.y) < 0.00000001)
 			return true;
 		return false;
 	}
@@ -403,9 +402,9 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 	var lastDate = new Date();
 
 	//init fps counter
-	var stats = new Stats();
-	stats.showPanel( 1 );
-	document.body.appendChild( stats.dom );
+	//var stats = new Stats();
+	//stats.showPanel( 1 );
+	//document.body.appendChild( stats.dom );
 
 
 	var render = function () {
@@ -413,7 +412,7 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 		if(self.isRunning == false)
 			return;
 
-		stats.begin();
+		//stats.begin();
 		var now = new Date();
 		var delta = (now - lastDate);
 		lastDate = now;
@@ -462,7 +461,7 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 		if(updateCallBack)
 			updateCallBack(delta,self);
 
-		stats.end();
+		//stats.end();
 	};
 	render();
 }
@@ -492,7 +491,7 @@ module.exports = function SlitherRender(slither)
 	this.slither = slither;
 	this.meshes = new Array();
 	var img = new Image();
-	img.src = "static/circle_mask.png";
+	img.src = "circle_mask.png";
 	this.update = function(deltaTime,gameRender)
 	{
 		if(self.slither.dead)
@@ -608,7 +607,7 @@ function Server(serverUrl,commandCallBack)
 	{
 		if(websocket)
 			return;
-		websocket = new WebSocket("ws://localhost:8081",'slither');//serverUrl
+		websocket = new WebSocket("ws://192.168.2.1:8081",'slither');//serverUrl
 		websocket.onopen = function(e)
 		{
 			console.log("Connect success!!! Begin login...");

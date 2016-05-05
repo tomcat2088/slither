@@ -64,7 +64,7 @@ function Point(x,y)
 
 	self.equal = function(pt)
 	{
-		if(self.x == pt.x && self.y == pt.y)
+		if(Math.abs(self.x - pt.x) < 0.00000001 && Math.abs(self.y - pt.y) < 0.00000001)
 			return true;
 		return false;
 	}

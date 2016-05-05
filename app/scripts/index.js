@@ -5,7 +5,6 @@ var SlitherRender = require("./render/slither_render.js");
 var SlitherAI = require("./slither_ai.js");
 window.onload = function()
 {
-	
 	window.gameRender = new GameRender('canvas',function(deltaTime){
 		
 	});
