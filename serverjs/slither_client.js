@@ -37,6 +37,9 @@ module.exports = function SlitherClient(connection,dispatcher)
 			case Commands.Kill:
 				self.kill(data);
 				break;
+			case Commands.SyncSlitherExceptPoints:
+				self.syncExceptPoints(data);
+				break;
 		}
 	}
 
@@ -64,8 +67,14 @@ module.exports = function SlitherClient(connection,dispatcher)
 
 	self.sync = function(data)
 	{
-		self.slither.parse(data);
+		self.slither.parse(data,true);
 		self.dispatcher.dispatch(Commands.SyncSlither,self.slither);
+	}
+
+	self.syncExceptPoints = function(data)
+	{
+		self.slither.parse(data,false);
+		self.dispatcher.dispatch(Commands.SyncSlitherExceptPoints,self.slither.exceptPoints());
 	}
 
 	self.sendMap = function()

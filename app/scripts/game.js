@@ -22,7 +22,8 @@ module.exports = function Game(gameRender)
 	}
 
 	
-
+	self.slitherCreated = null;
+	self.updateCallback = null;
 	self.otherSlithers = new Object();//other player's slithers
 	self.slitherAIs = new Array();
 
@@ -32,7 +33,10 @@ module.exports = function Game(gameRender)
 		{
 			self.slither = new Slither(0,0);
 			self.slither.deserialize(obj);
-			self.gameRender.registerRender(new SlitherRender(self.slither));
+			if(self.slitherCreated)
+				self.slitherCreated();
+			if(!(typeof WebSocket === 'undefined'))
+				self.gameRender.registerRender(new SlitherRender(self.slither));
 			self.begin();
 			
 			self.server.loadMap();
@@ -47,7 +51,8 @@ module.exports = function Game(gameRender)
 			if(!self.otherSlithers[obj.uid])
 			{
 				self.otherSlithers[obj.uid] = new Slither();
-				self.gameRender.registerRender(new SlitherRender(self.otherSlithers[obj.uid]),obj.uid);
+				if(!(typeof WebSocket === 'undefined'))
+					self.gameRender.registerRender(new SlitherRender(self.otherSlithers[obj.uid]),obj.uid);
 			}
 			self.otherSlithers[obj.uid].deserialize(obj);
 				
@@ -55,11 +60,14 @@ module.exports = function Game(gameRender)
 		else if(command == self.server.Server_Command_Map)
 		{
 			self.slitherMap = obj;
-			if(self.gameRender.isRenderRegistered("SlitherMap") == false)
-				self.gameRender.registerRender(new SlitherMapRender(self.slitherMap),"SlitherMap");
-			else
+			if(!(typeof WebSocket === 'undefined'))
 			{
-				self.gameRender.registeredRender("SlitherMap").map = obj;
+				if(self.gameRender.isRenderRegistered("SlitherMap") == false)
+					self.gameRender.registerRender(new SlitherMapRender(self.slitherMap),"SlitherMap");
+				else
+				{
+					self.gameRender.registeredRender("SlitherMap").map = obj;
+				}
 			}
 		}
 		else if(command == self.server.Server_Command_EatFood)
@@ -87,6 +95,7 @@ module.exports = function Game(gameRender)
 	this.updateHandler = 0;
 	this.begin = function()
 	{
+		console.log('begin');
 		self.gameRender.isRunning = true;
 		self.updateHandler = setInterval(function(){
 			window.game.update(1000/30);
@@ -99,12 +108,14 @@ module.exports = function Game(gameRender)
 		clearInterval(self.updateHandler);
 	}
 
+	var lastUpdatePointsTime = 0.05;
 	this.update = function(deltaTime)
 	{
 		deltaTime /= 1000;
 		if(self.slither == null)
 			return;
-
+		if(self.updateCallback)
+			self.updateCallback(deltaTime);
 		self.slither.update(deltaTime);
 
 		// for(var key in self.slitherAIs)
@@ -122,7 +133,18 @@ module.exports = function Game(gameRender)
 		checkSlithersEatFood();
 		checkSlitherCollide();
 
-		self.server.syncSlither(self.slither.serialize());
+
+		if(lastUpdatePointsTime <= 0)
+		{
+			self.server.syncSlither(self.slither.serialize());
+			lastUpdatePointsTime = 0.05;
+		}
+		else
+		{
+			self.server.syncSlitherExceptPoints(self.slither.serializeExceptPoints());
+		}
+		lastUpdatePointsTime -= deltaTime;
+
 
 		checkSlitherEatFood(self.slither);
 

@@ -1,3 +1,4 @@
+var Socket = require("./socket.js");
 function Server(serverUrl,commandCallBack)
 {
 	var self = this;
@@ -9,6 +10,8 @@ function Server(serverUrl,commandCallBack)
 	self.Server_Command_EatFood = 10004;
 	self.Server_Command_Logout = 10005;
 
+	self.Server_Command_SyncSlitherExceptPoints = 10006;
+
 	self.commandCallBack = commandCallBack;
 
 	self.avaliable = false;
@@ -18,16 +21,16 @@ function Server(serverUrl,commandCallBack)
 	{
 		if(websocket)
 			return;
-		websocket = new WebSocket("ws://192.168.0.102:8081",'slither');//serverUrl
-		websocket.onopen = function(e)
-		{
-			console.log("Connect success!!! Begin login...");
-			sendCommand(self.Server_Command_Login,{'nickname':nickname});
-		}
+		websocket = new Socket("ws://192.168.0.102:8081",'slither');//serverUrl
 		websocket.onmessage = function(e)
 		{
 			var obj = JSON.parse(e.data);
 			processResponse(obj);
+		}
+		websocket.onopen = function(e)
+		{
+			console.log("Connect success!!! Begin login...");
+			sendCommand(self.Server_Command_Login,{'nickname':nickname});
 		}
 	}
 
@@ -39,6 +42,11 @@ function Server(serverUrl,commandCallBack)
 	this.syncSlither = function(slither)
 	{
 		sendCommand(self.Server_Command_SyncSlither,slither);	
+	}
+
+	this.syncSlitherExceptPoints = function(slither)
+	{
+		sendCommand(self.Server_Command_SyncSlitherExceptPoints,slither);	
 	}
 
 	this.eatFood = function(uid)

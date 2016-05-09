@@ -1,5 +1,4 @@
 var Point = require("../math.js");
-var textureManager = require("./texture_manager.js");
 module.exports = function SlitherRender(slither)
 {
 	var self = this;

@@ -24,9 +24,28 @@ function SitherData(binaryData)
 		return JSON.stringify(self);
 	}
 
-	this.parse = function(data)
+	this.exceptPoints = function(transmitPoints)
 	{
-		self.points = data.points;
+		var obj = new Object();
+		obj.nickname = self.nickname;
+		obj.uid = self.uid;
+		obj.speed = self.speed;
+		obj.direction = self.direction;
+
+		if(transmitPoints)
+			obj.points = self.points;
+		return obj;
+	}
+
+	this.parse = function(data,transmitPoints)
+	{
+		self.nickname = data.nickname;
+		self.uid = data.uid;
+		self.speed = data.speed;
+		self.direction = data.direction;
+
+		if(transmitPoints)
+			self.points = data.points;
 		self.width = parseInt(self.length / 60) + 20;
 	}
 

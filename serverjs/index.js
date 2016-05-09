@@ -41,5 +41,6 @@ wsServer.on('request', function(request) {
     }
     
     var connection = request.accept('slither', request.origin);
+    console.log("Connect Accept!!!");
     dispatchCenter.addClient(connection);
 });

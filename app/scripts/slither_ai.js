@@ -2,15 +2,21 @@ var Slither = require("./slither.js");
 var SlitherRender = require("./render/slither_render.js");
 var GameRender = require("./render/game_render.js");
 var Point = require("./math.js");
-module.exports = function SlitherAI(gameRender)
+module.exports = function SlitherAI(gameRender,slither)
 {
 	var self = this;
-	self.slither = new Slither(200,100);
-	self.slither.color = "#2222ff";
-	// self.slither.width = 15;
-	self.slither.length = 300;
-	self.slither.speed = 170;
-	gameRender.registerRender(new SlitherRender(self.slither));
+	if(slither)
+		self.slither = slither;
+	else
+	{
+		self.slither = new Slither(200,100);
+		self.slither.color = "#2222ff";
+		// self.slither.width = 15;
+		self.slither.length = 300;
+		self.slither.speed = 170;
+	}
+	if(gameRender)
+		gameRender.registerRender(new SlitherRender(self.slither));
 
 
 	var thinkDelay = 1;

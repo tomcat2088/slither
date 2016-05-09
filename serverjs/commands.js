@@ -5,4 +5,5 @@ module.exports = {
 	Kill : 10003,
 	EatFood : 10004,
 	Logout : 10005,
+	SyncSlitherExceptPoints : 10006
 };

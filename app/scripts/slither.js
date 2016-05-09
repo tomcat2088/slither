@@ -79,6 +79,19 @@ module.exports = function Slither(xLoc,yLoc,data)
 		obj.width = self.width;
 		obj.points = self.points;
 		obj.color = self.color;
+		obj.uid = self.uid;
+		return obj;
+	}
+
+	this.serializeExceptPoints = function()
+	{
+		var obj = new Object();
+		obj.length = self.length;
+		obj.width = self.width;
+		obj.color = self.color;
+		obj.uid = self.uid;
+		obj.nickname = self.nickname;
+		obj.direction = self.direction;
 		return obj;
 	}
 

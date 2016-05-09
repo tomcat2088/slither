@@ -1,4 +1,162 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var _global = (function() { return this; })();
+var nativeWebSocket = _global.WebSocket || _global.MozWebSocket;
+var websocket_version = require('./version');
+
+
+/**
+ * Expose a W3C WebSocket class with just one or two arguments.
+ */
+function W3CWebSocket(uri, protocols) {
+	var native_instance;
+
+	if (protocols) {
+		native_instance = new nativeWebSocket(uri, protocols);
+	}
+	else {
+		native_instance = new nativeWebSocket(uri);
+	}
+
+	/**
+	 * 'native_instance' is an instance of nativeWebSocket (the browser's WebSocket
+	 * class). Since it is an Object it will be returned as it is when creating an
+	 * instance of W3CWebSocket via 'new W3CWebSocket()'.
+	 *
+	 * ECMAScript 5: http://bclary.com/2004/11/07/#a-13.2.2
+	 */
+	return native_instance;
+}
+
+
+/**
+ * Module exports.
+ */
+module.exports = {
+    'w3cwebsocket' : nativeWebSocket ? W3CWebSocket : null,
+    'version'      : websocket_version
+};
+
+},{"./version":2}],2:[function(require,module,exports){
+module.exports = require('../package.json').version;
+
+},{"../package.json":3}],3:[function(require,module,exports){
+module.exports={
+  "_args": [
+    [
+      "WebSocket",
+      "/Users/ocean/Documents/Projects/Game/slither/app"
+    ]
+  ],
+  "_from": "WebSocket@latest",
+  "_id": "websocket@1.0.22",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/websocket",
+  "_nodeVersion": "3.3.1",
+  "_npmUser": {
+    "email": "brian@worlize.com",
+    "name": "theturtle32"
+  },
+  "_npmVersion": "2.14.3",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "WebSocket",
+    "raw": "WebSocket",
+    "rawSpec": "",
+    "scope": null,
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/websocket/-/websocket-1.0.22.tgz",
+  "_shasum": "8c33e3449f879aaf518297c9744cebf812b9e3d8",
+  "_shrinkwrap": null,
+  "_spec": "WebSocket",
+  "_where": "/Users/ocean/Documents/Projects/Game/slither/app",
+  "author": {
+    "email": "brian@worlize.com",
+    "name": "Brian McKelvey",
+    "url": "https://www.worlize.com/"
+  },
+  "browser": "lib/browser.js",
+  "bugs": {
+    "url": "https://github.com/theturtle32/WebSocket-Node/issues"
+  },
+  "config": {
+    "verbose": false
+  },
+  "contributors": [
+    {
+      "name": "Iñaki Baz Castillo",
+      "email": "ibc@aliax.net",
+      "url": "http://dev.sipdoc.net"
+    }
+  ],
+  "dependencies": {
+    "debug": "~2.2.0",
+    "nan": "~2.0.5",
+    "typedarray-to-buffer": "~3.0.3",
+    "yaeti": "~0.0.4"
+  },
+  "description": "Websocket Client & Server Library implementing the WebSocket protocol as specified in RFC 6455.",
+  "devDependencies": {
+    "buffer-equal": "^0.0.1",
+    "faucet": "^0.0.1",
+    "gulp": "git+https://github.com/gulpjs/gulp.git#4.0",
+    "gulp-jshint": "^1.11.2",
+    "jshint-stylish": "^1.0.2",
+    "tape": "^4.0.1"
+  },
+  "directories": {
+    "lib": "./lib"
+  },
+  "dist": {
+    "shasum": "8c33e3449f879aaf518297c9744cebf812b9e3d8",
+    "tarball": "https://registry.npmjs.org/websocket/-/websocket-1.0.22.tgz"
+  },
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "gitHead": "19108bbfd7d94a5cd02dbff3495eafee9e901ca4",
+  "homepage": "https://github.com/theturtle32/WebSocket-Node",
+  "keywords": [
+    "RFC-6455",
+    "client",
+    "comet",
+    "networking",
+    "push",
+    "realtime",
+    "server",
+    "socket",
+    "websocket",
+    "websockets"
+  ],
+  "license": "Apache-2.0",
+  "main": "index",
+  "maintainers": [
+    {
+      "name": "theturtle32",
+      "email": "brian@worlize.com"
+    }
+  ],
+  "name": "websocket",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theturtle32/WebSocket-Node.git"
+  },
+  "scripts": {
+    "gulp": "gulp",
+    "install": "(node-gyp rebuild 2> builderror.log) || (exit 0)",
+    "test": "faucet test/unit"
+  },
+  "version": "1.0.22"
+}
+
+},{}],4:[function(require,module,exports){
 var Slither = require("./slither.js");
 var Server = require("./server.js");
 //var Server = require("./virtual_server.js");
@@ -23,7 +181,8 @@ module.exports = function Game(gameRender)
 	}
 
 	
-
+	self.slitherCreated = null;
+	self.updateCallback = null;
 	self.otherSlithers = new Object();//other player's slithers
 	self.slitherAIs = new Array();
 
@@ -33,7 +192,10 @@ module.exports = function Game(gameRender)
 		{
 			self.slither = new Slither(0,0);
 			self.slither.deserialize(obj);
-			self.gameRender.registerRender(new SlitherRender(self.slither));
+			if(self.slitherCreated)
+				self.slitherCreated();
+			if(!(typeof WebSocket === 'undefined'))
+				self.gameRender.registerRender(new SlitherRender(self.slither));
 			self.begin();
 			
 			self.server.loadMap();
@@ -48,7 +210,8 @@ module.exports = function Game(gameRender)
 			if(!self.otherSlithers[obj.uid])
 			{
 				self.otherSlithers[obj.uid] = new Slither();
-				self.gameRender.registerRender(new SlitherRender(self.otherSlithers[obj.uid]),obj.uid);
+				if(!(typeof WebSocket === 'undefined'))
+					self.gameRender.registerRender(new SlitherRender(self.otherSlithers[obj.uid]),obj.uid);
 			}
 			self.otherSlithers[obj.uid].deserialize(obj);
 				
@@ -56,11 +219,14 @@ module.exports = function Game(gameRender)
 		else if(command == self.server.Server_Command_Map)
 		{
 			self.slitherMap = obj;
-			if(self.gameRender.isRenderRegistered("SlitherMap") == false)
-				self.gameRender.registerRender(new SlitherMapRender(self.slitherMap),"SlitherMap");
-			else
+			if(!(typeof WebSocket === 'undefined'))
 			{
-				self.gameRender.registeredRender("SlitherMap").map = obj;
+				if(self.gameRender.isRenderRegistered("SlitherMap") == false)
+					self.gameRender.registerRender(new SlitherMapRender(self.slitherMap),"SlitherMap");
+				else
+				{
+					self.gameRender.registeredRender("SlitherMap").map = obj;
+				}
 			}
 		}
 		else if(command == self.server.Server_Command_EatFood)
@@ -88,6 +254,7 @@ module.exports = function Game(gameRender)
 	this.updateHandler = 0;
 	this.begin = function()
 	{
+		console.log('begin');
 		self.gameRender.isRunning = true;
 		self.updateHandler = setInterval(function(){
 			window.game.update(1000/30);
@@ -100,12 +267,14 @@ module.exports = function Game(gameRender)
 		clearInterval(self.updateHandler);
 	}
 
+	var lastUpdatePointsTime = 0.05;
 	this.update = function(deltaTime)
 	{
 		deltaTime /= 1000;
 		if(self.slither == null)
 			return;
-
+		if(self.updateCallback)
+			self.updateCallback(deltaTime);
 		self.slither.update(deltaTime);
 
 		// for(var key in self.slitherAIs)
@@ -123,7 +292,18 @@ module.exports = function Game(gameRender)
 		checkSlithersEatFood();
 		checkSlitherCollide();
 
-		self.server.syncSlither(self.slither.serialize());
+
+		if(lastUpdatePointsTime <= 0)
+		{
+			self.server.syncSlither(self.slither.serialize());
+			lastUpdatePointsTime = 0.05;
+		}
+		else
+		{
+			self.server.syncSlitherExceptPoints(self.slither.serializeExceptPoints());
+		}
+		lastUpdatePointsTime -= deltaTime;
+
 
 		checkSlitherEatFood(self.slither);
 
@@ -184,7 +364,7 @@ module.exports = function Game(gameRender)
 		}
 	}
 }
-},{"./math.js":3,"./render/slither_map_render.js":5,"./render/slither_render.js":6,"./server.js":8,"./slither.js":9,"./slither_ai.js":10}],2:[function(require,module,exports){
+},{"./math.js":6,"./render/slither_map_render.js":8,"./render/slither_render.js":9,"./server.js":10,"./slither.js":11,"./slither_ai.js":12}],5:[function(require,module,exports){
 var Game = require("./game.js");
 var Point = require("./math.js");
 var GameRender = require("./render/game_render.js");
@@ -236,7 +416,7 @@ window.addEventListener('keyup',function(e){
 		game.slither.speed = 100;
 	}
 });
-},{"./game.js":1,"./math.js":3,"./render/game_render.js":4,"./render/slither_render.js":6,"./slither_ai.js":10}],3:[function(require,module,exports){
+},{"./game.js":4,"./math.js":6,"./render/game_render.js":7,"./render/slither_render.js":9,"./slither_ai.js":12}],6:[function(require,module,exports){
 var xVec = new Point(1,0);
 function Point(x,y)
 {
@@ -366,8 +546,7 @@ function Point(x,y)
 	}
 }
 module.exports = Point;
-},{}],4:[function(require,module,exports){
-var textureManager = require("./texture_manager.js")
+},{}],7:[function(require,module,exports){
 var Point = require("../math.js")
 module.exports = function GameRender(canvasId,updateCallBack) {
 	var self = this;
@@ -477,7 +656,7 @@ module.exports = function GameRender(canvasId,updateCallBack) {
 	render();
 }
 
-},{"../math.js":3,"./texture_manager.js":7}],5:[function(require,module,exports){
+},{"../math.js":6}],8:[function(require,module,exports){
 module.exports = function SlitherMapRender(map)
 {
 	var self = this;
@@ -493,9 +672,8 @@ module.exports = function SlitherMapRender(map)
 		}
 	}
 }
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var Point = require("../math.js");
-var textureManager = require("./texture_manager.js");
 module.exports = function SlitherRender(slither)
 {
 	var self = this;
@@ -567,37 +745,8 @@ module.exports = function SlitherRender(slither)
 		}
 	}
 }
-},{"../math.js":3,"./texture_manager.js":7}],7:[function(require,module,exports){
-function TextureManager()
-{
-	var self = this;
-	var loader = new THREE.TextureLoader();
-	self.cachedTexture = new Object();
-	this.texture = function(url,callback)
-	{
-		if(self.cachedTexture[url])
-		{
-			if(callback)
-				callback(self.cachedTexture[url])
-			return;
-		}
-		loader.load(
-			// resource URL
-			url,
-			// Function when resource is loaded
-			function ( texture ) {
-				if(callback)
-				{
-					callback(texture);
-				}
-			}
-		);
-	}
-}
-
-var manager = new TextureManager();
-module.exports = manager;
-},{}],8:[function(require,module,exports){
+},{"../math.js":6}],10:[function(require,module,exports){
+var Socket = require("./socket.js");
 function Server(serverUrl,commandCallBack)
 {
 	var self = this;
@@ -609,6 +758,8 @@ function Server(serverUrl,commandCallBack)
 	self.Server_Command_EatFood = 10004;
 	self.Server_Command_Logout = 10005;
 
+	self.Server_Command_SyncSlitherExceptPoints = 10006;
+
 	self.commandCallBack = commandCallBack;
 
 	self.avaliable = false;
@@ -618,16 +769,16 @@ function Server(serverUrl,commandCallBack)
 	{
 		if(websocket)
 			return;
-		websocket = new WebSocket("ws://192.168.0.102:8081",'slither');//serverUrl
-		websocket.onopen = function(e)
-		{
-			console.log("Connect success!!! Begin login...");
-			sendCommand(self.Server_Command_Login,{'nickname':nickname});
-		}
+		websocket = new Socket("ws://192.168.0.102:8081",'slither');//serverUrl
 		websocket.onmessage = function(e)
 		{
 			var obj = JSON.parse(e.data);
 			processResponse(obj);
+		}
+		websocket.onopen = function(e)
+		{
+			console.log("Connect success!!! Begin login...");
+			sendCommand(self.Server_Command_Login,{'nickname':nickname});
 		}
 	}
 
@@ -639,6 +790,11 @@ function Server(serverUrl,commandCallBack)
 	this.syncSlither = function(slither)
 	{
 		sendCommand(self.Server_Command_SyncSlither,slither);	
+	}
+
+	this.syncSlitherExceptPoints = function(slither)
+	{
+		sendCommand(self.Server_Command_SyncSlitherExceptPoints,slither);	
 	}
 
 	this.eatFood = function(uid)
@@ -679,7 +835,7 @@ function Server(serverUrl,commandCallBack)
 }
 
 module.exports = Server;
-},{}],9:[function(require,module,exports){
+},{"./socket.js":13}],11:[function(require,module,exports){
 var Point = require("./math.js");
 
 module.exports = function Slither(xLoc,yLoc,data)
@@ -761,6 +917,19 @@ module.exports = function Slither(xLoc,yLoc,data)
 		obj.width = self.width;
 		obj.points = self.points;
 		obj.color = self.color;
+		obj.uid = self.uid;
+		return obj;
+	}
+
+	this.serializeExceptPoints = function()
+	{
+		var obj = new Object();
+		obj.length = self.length;
+		obj.width = self.width;
+		obj.color = self.color;
+		obj.uid = self.uid;
+		obj.nickname = self.nickname;
+		obj.direction = self.direction;
 		return obj;
 	}
 
@@ -875,20 +1044,26 @@ module.exports = function Slither(xLoc,yLoc,data)
 	}
 
 }
-},{"./math.js":3}],10:[function(require,module,exports){
+},{"./math.js":6}],12:[function(require,module,exports){
 var Slither = require("./slither.js");
 var SlitherRender = require("./render/slither_render.js");
 var GameRender = require("./render/game_render.js");
 var Point = require("./math.js");
-module.exports = function SlitherAI(gameRender)
+module.exports = function SlitherAI(gameRender,slither)
 {
 	var self = this;
-	self.slither = new Slither(200,100);
-	self.slither.color = "#2222ff";
-	// self.slither.width = 15;
-	self.slither.length = 300;
-	self.slither.speed = 170;
-	gameRender.registerRender(new SlitherRender(self.slither));
+	if(slither)
+		self.slither = slither;
+	else
+	{
+		self.slither = new Slither(200,100);
+		self.slither.color = "#2222ff";
+		// self.slither.width = 15;
+		self.slither.length = 300;
+		self.slither.speed = 170;
+	}
+	if(gameRender)
+		gameRender.registerRender(new SlitherRender(self.slither));
 
 
 	var thinkDelay = 1;
@@ -935,4 +1110,67 @@ module.exports = function SlitherAI(gameRender)
 		}
 	}
 }
-},{"./math.js":3,"./render/game_render.js":4,"./render/slither_render.js":6,"./slither.js":9}]},{},[2]);
+},{"./math.js":6,"./render/game_render.js":7,"./render/slither_render.js":9,"./slither.js":11}],13:[function(require,module,exports){
+function Socket(url,protocol)
+{
+	var self = this;
+	self.brSock = null;
+	self.nodeSock = null;
+	self.nodeConn = null;
+	if(typeof WebSocket === 'undefined')
+	{
+		var NodeSock = require("WebSocket").client;
+		self.nodeSock = new NodeSock();
+		self.nodeSock.on('connect',function(connection)
+		{
+			console.log("Connected");
+			self.nodeConn = connection;
+			if(self.onopen)
+			{
+				self.onopen('');
+			}
+			connection.on('message',function(e)
+			{
+				if(self.onmessage)
+				{
+					//console.log(e.utf8Data);
+					self.onmessage({'data':e.utf8Data});
+				}
+			});
+		});
+		self.nodeSock.connect(url,protocol);
+	}
+	else
+	{
+		self.brSock = new window.WebSocket(url,protocol);
+		self.brSock.onopen = function(e)
+		{
+			if(self.onopen)
+			{
+				self.onopen(e);
+			}
+		}
+		self.brSock.onmessage = function(e)
+		{
+			if(self.onmessage)
+			{
+				self.onmessage(e);
+			}
+		}
+	}
+
+	self.send = function(message)
+	{
+		if(self.nodeConn)
+		{
+			self.nodeConn.sendUTF(message);
+		}
+		if(self.brSock)
+		{
+			self.brSock.send(message);
+		}
+	}
+}
+
+module.exports = Socket;
+},{"WebSocket":1}]},{},[5]);

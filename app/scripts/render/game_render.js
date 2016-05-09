@@ -1,4 +1,3 @@
-var textureManager = require("./texture_manager.js")
 var Point = require("../math.js")
 module.exports = function GameRender(canvasId,updateCallBack) {
 	var self = this;
