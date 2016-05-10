@@ -6,9 +6,8 @@ function SitherData(binaryData)
 	var self = this;
 	self.nickname = "";
 	self.uid = "";
-	self.length = 200;
+	self.length = 500;
 	self.width = 20;
-	self.points = [new Point(xLoc,yLoc-200),new Point(xLoc,yLoc)];
 	self.skin = 0;
 
 	self.speed = 90;
@@ -17,6 +16,17 @@ function SitherData(binaryData)
 	if(binaryData)
 	{
 		applyBinaryData(binaryData);
+	}
+
+	initPoints();
+
+	function initPoints()
+	{
+		self.points = new Array();
+		for(var i=self.length-1;i >= 0;i--)
+		{
+			self.points.push(new Point(0,0 - i * self.width));
+		}
 	}
 
 	this.toBinary = function()

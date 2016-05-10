@@ -12,7 +12,10 @@ module.exports = function Slither(xLoc,yLoc,data)
 	self.length = 200;
 	self.width = 20;
 	self.points = [new Point(xLoc,yLoc-200),new Point(xLoc,yLoc)];
+	self.oldPoints = new Array();
 	self.color = '#ff3300';
+	self.leftAnimationTime = 0;
+	self.updateTime = null;
 
 	self.speed = 90;
 	self.direction = (new Point(2,2)).normalize();
@@ -109,11 +112,50 @@ module.exports = function Slither(xLoc,yLoc,data)
 		self.color = obj.color;
 	}
 
+	var movePt = new Point();
+	var moveDistanceVec = new Point();
+	var lastPt = new Point();
+	var sumTime = 0;
 	this.update = function(deltaTime)
 	{
 		//this.updateDirection(deltaTime);
-		forwardDistance = updateHead(deltaTime);
-		updateTail(deltaTime,forwardDistance);
+		// forwardDistance = updateHead(deltaTime);
+		// updateTail(deltaTime,forwardDistance);
+		sumTime += deltaTime/1000;
+		if(sumTime >= 0.2)
+		{
+			self.leftAnimationTime = sumTime;
+			self.updateTime = new Date();
+			self.direction.assign(moveDistanceVec);
+			self.points[self.points.length - 1].assign(movePt);
+			movePt.add(moveDistanceVec.mul(self.width),true);
+			self.points[0].assign(lastPt);
+			movePt.assign(self.points[0]);
+			self.points.push(self.points.shift());
+			sumTime = 0;
+		}
+	}
+
+	var offsetPt = new Point();
+	this.renderPoints = function()
+	{
+		if(self.updateTime == null)
+			return self.points;
+		var secs = (new Date()) - self.updateTime;
+		lastPt.assign(offsetPt);
+		var percent = secs / 1000 / self.leftAnimationTime;
+		if(percent > 1)
+			percent = 1;
+		for(var key in self.points)
+		{
+			offsetPt.sub(self.points[key],true);
+			offsetPt.mul(1 - percent,true);
+
+			self.points[key].offsetX = offsetPt.x;
+			self.points[key].offsetY = offsetPt.y;
+
+			self.points[key].assign(offsetPt);
+		}
 	}
 
 	var dieTestHead = new Point();

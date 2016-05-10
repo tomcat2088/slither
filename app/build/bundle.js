@@ -175,7 +175,7 @@ module.exports = function Game(gameRender)
 		if(self.slither)
 		{
 			var pt = self.slither.points[self.slither.points.length - 1];
-			return pt;
+			return {x:pt.offX(),y:pt.offY()};
 		}
 		return new Point(0,0);
 	}
@@ -257,8 +257,8 @@ module.exports = function Game(gameRender)
 		console.log('begin');
 		self.gameRender.isRunning = true;
 		self.updateHandler = setInterval(function(){
-			window.game.update(1000/30);
-		}, 1000/30);
+			window.game.update(1000);
+		}, 1000);
 	}
 
 	this.end = function()
@@ -275,7 +275,7 @@ module.exports = function Game(gameRender)
 			return;
 		if(self.updateCallback)
 			self.updateCallback(deltaTime);
-		self.slither.update(deltaTime);
+		//self.slither.update(deltaTime);
 
 		// for(var key in self.slitherAIs)
 		// {
@@ -289,23 +289,23 @@ module.exports = function Game(gameRender)
 		// 	}
 		// }
 
-		checkSlithersEatFood();
-		checkSlitherCollide();
+		//checkSlithersEatFood();
+		//checkSlitherCollide();
 
 
-		if(lastUpdatePointsTime <= 0)
-		{
-			self.server.syncSlither(self.slither.serialize());
-			lastUpdatePointsTime = 0.05;
-		}
-		else
-		{
-			self.server.syncSlitherExceptPoints(self.slither.serializeExceptPoints());
-		}
+		// if(lastUpdatePointsTime <= 0)
+		// {
+		// 	self.server.syncSlither(self.slither.serialize());
+		// 	lastUpdatePointsTime = 0.05;
+		// }
+		// else
+		// {
+		// 	self.server.syncSlitherExceptPoints(self.slither.serializeExceptPoints());
+		// }
 		lastUpdatePointsTime -= deltaTime;
 
 
-		checkSlitherEatFood(self.slither);
+		//checkSlitherEatFood(self.slither);
 
 	}
 
@@ -423,13 +423,23 @@ function Point(x,y)
 	var self = this;
 	self.x = x;
 	self.y = y;
+	self.offsetX = 0;
+	self.offsetY = 0;
 	self.assign = function(target)
 	{
 		target.x = self.x;
 		target.y = self.y;
 	}
 
-	
+	self.offX = function()
+	{
+		return self.x + self.offsetX;
+	}
+
+	self.offY = function()
+	{
+		return self.y + self.offsetY;
+	}
 
 	self.add = function(pt,addToSelf)
 	{
@@ -686,12 +696,14 @@ module.exports = function SlitherRender(slither)
 		if(self.slither.dead)
 			self.invalid = true;
 		var context = gameRender.context;
+		self.slither.update(deltaTime);
+		self.slither.renderPoints();
 		var points = self.slither.points;
 		drawCirclesOnLine(points,context,self.slither);
 		context.lineWidth = 1;
 		context.strokeStyle = "#fff";
 		firstPt = points[points.length - 1];
-		context.strokeText("ocean:" + self.slither.targetDegree,firstPt.x,firstPt.y - 5);
+		context.strokeText("ocean:" + self.slither.targetDegree,firstPt.offX(),firstPt.offY() - 5);
 	}
 
 
@@ -710,39 +722,44 @@ module.exports = function SlitherRender(slither)
 		var trackedLen = 0;
 		var drawLocationLen = 0;
 
-		while(1)
+		for(var key in slither.points)
 		{
-			//context.fillStyle = "#330000";
-			//context.fillRect(slither.points[pointSearchIndex].x,slither.points[pointSearchIndex].y,10,10);
-
-			slither.points[pointSearchIndex + 1].assign(caculatePoint);
-			caculatePoint.sub(slither.points[pointSearchIndex],true);
-
-			//delta = caculatePoint
-			caculatePoint.assign(caculatePointNormalize);
-			caculatePointNormalize.normalize(true);
-			var totalLen = caculatePoint.len();
-
-			if(trackedLen + totalLen >= drawLocationLen)
-			{
-				var offset = drawLocationLen - trackedLen;
-				slither.points[pointSearchIndex].assign(drawPt);
-				caculatePointNormalize.mul(offset,true);
-				drawPt.add(caculatePointNormalize,true);
-				drawLocationLen += radius / 2;
-				context.drawImage(img,drawPt.x,drawPt.y,radius * 2,radius * 2);
-			}
-			else
-			{
-				pointSearchIndex ++;
-				trackedLen += totalLen;
-				if(pointSearchIndex >= pts.length - 1)
-				{
-					context.drawImage(img,pts[pts.length - 1].x,pts[pts.length - 1].y,radius * 2,radius * 2);
-					return;
-				}
-			}
+			context.fillRect(slither.points[key].offX(),slither.points[key].offY(),10,10);
 		}
+
+		// while(1)
+		// {
+		// 	//context.fillStyle = "#330000";
+		// 	//context.fillRect(slither.points[pointSearchIndex].x,slither.points[pointSearchIndex].y,10,10);
+
+		// 	slither.points[pointSearchIndex + 1].assign(caculatePoint);
+		// 	caculatePoint.sub(slither.points[pointSearchIndex],true);
+
+		// 	//delta = caculatePoint
+		// 	caculatePoint.assign(caculatePointNormalize);
+		// 	caculatePointNormalize.normalize(true);
+		// 	var totalLen = caculatePoint.len();
+
+		// 	if(trackedLen + totalLen >= drawLocationLen)
+		// 	{
+		// 		var offset = drawLocationLen - trackedLen;
+		// 		slither.points[pointSearchIndex].assign(drawPt);
+		// 		caculatePointNormalize.mul(offset,true);
+		// 		drawPt.add(caculatePointNormalize,true);
+		// 		drawLocationLen += radius / 2;
+		// 		context.drawImage(img,drawPt.x,drawPt.y,radius * 2,radius * 2);
+		// 	}
+		// 	else
+		// 	{
+		// 		pointSearchIndex ++;
+		// 		trackedLen += totalLen;
+		// 		if(pointSearchIndex >= pts.length - 1)
+		// 		{
+		// 			context.drawImage(img,pts[pts.length - 1].x,pts[pts.length - 1].y,radius * 2,radius * 2);
+		// 			return;
+		// 		}
+		// 	}
+		// }
 	}
 }
 },{"../math.js":6}],10:[function(require,module,exports){
@@ -769,7 +786,7 @@ function Server(serverUrl,commandCallBack)
 	{
 		if(websocket)
 			return;
-		websocket = new Socket("ws://192.168.0.102:8081",'slither');//serverUrl
+		websocket = new Socket("ws://192.168.0.100:8081",'slither');//serverUrl
 		websocket.onmessage = function(e)
 		{
 			var obj = JSON.parse(e.data);
@@ -850,7 +867,10 @@ module.exports = function Slither(xLoc,yLoc,data)
 	self.length = 200;
 	self.width = 20;
 	self.points = [new Point(xLoc,yLoc-200),new Point(xLoc,yLoc)];
+	self.oldPoints = new Array();
 	self.color = '#ff3300';
+	self.leftAnimationTime = 0;
+	self.updateTime = null;
 
 	self.speed = 90;
 	self.direction = (new Point(2,2)).normalize();
@@ -947,11 +967,50 @@ module.exports = function Slither(xLoc,yLoc,data)
 		self.color = obj.color;
 	}
 
+	var movePt = new Point();
+	var moveDistanceVec = new Point();
+	var lastPt = new Point();
+	var sumTime = 0;
 	this.update = function(deltaTime)
 	{
 		//this.updateDirection(deltaTime);
-		forwardDistance = updateHead(deltaTime);
-		updateTail(deltaTime,forwardDistance);
+		// forwardDistance = updateHead(deltaTime);
+		// updateTail(deltaTime,forwardDistance);
+		sumTime += deltaTime/1000;
+		if(sumTime >= 0.2)
+		{
+			self.leftAnimationTime = sumTime;
+			self.updateTime = new Date();
+			self.direction.assign(moveDistanceVec);
+			self.points[self.points.length - 1].assign(movePt);
+			movePt.add(moveDistanceVec.mul(self.width),true);
+			self.points[0].assign(lastPt);
+			movePt.assign(self.points[0]);
+			self.points.push(self.points.shift());
+			sumTime = 0;
+		}
+	}
+
+	var offsetPt = new Point();
+	this.renderPoints = function()
+	{
+		if(self.updateTime == null)
+			return self.points;
+		var secs = (new Date()) - self.updateTime;
+		lastPt.assign(offsetPt);
+		var percent = secs / 1000 / self.leftAnimationTime;
+		if(percent > 1)
+			percent = 1;
+		for(var key in self.points)
+		{
+			offsetPt.sub(self.points[key],true);
+			offsetPt.mul(1 - percent,true);
+
+			self.points[key].offsetX = offsetPt.x;
+			self.points[key].offsetY = offsetPt.y;
+
+			self.points[key].assign(offsetPt);
+		}
 	}
 
 	var dieTestHead = new Point();

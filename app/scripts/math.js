@@ -4,13 +4,23 @@ function Point(x,y)
 	var self = this;
 	self.x = x;
 	self.y = y;
+	self.offsetX = 0;
+	self.offsetY = 0;
 	self.assign = function(target)
 	{
 		target.x = self.x;
 		target.y = self.y;
 	}
 
-	
+	self.offX = function()
+	{
+		return self.x + self.offsetX;
+	}
+
+	self.offY = function()
+	{
+		return self.y + self.offsetY;
+	}
 
 	self.add = function(pt,addToSelf)
 	{

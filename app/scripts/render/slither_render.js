@@ -11,12 +11,14 @@ module.exports = function SlitherRender(slither)
 		if(self.slither.dead)
 			self.invalid = true;
 		var context = gameRender.context;
+		self.slither.update(deltaTime);
+		self.slither.renderPoints();
 		var points = self.slither.points;
 		drawCirclesOnLine(points,context,self.slither);
 		context.lineWidth = 1;
 		context.strokeStyle = "#fff";
 		firstPt = points[points.length - 1];
-		context.strokeText("ocean:" + self.slither.targetDegree,firstPt.x,firstPt.y - 5);
+		context.strokeText("ocean:" + self.slither.targetDegree,firstPt.offX(),firstPt.offY() - 5);
 	}
 
 
@@ -35,38 +37,43 @@ module.exports = function SlitherRender(slither)
 		var trackedLen = 0;
 		var drawLocationLen = 0;
 
-		while(1)
+		for(var key in slither.points)
 		{
-			//context.fillStyle = "#330000";
-			//context.fillRect(slither.points[pointSearchIndex].x,slither.points[pointSearchIndex].y,10,10);
-
-			slither.points[pointSearchIndex + 1].assign(caculatePoint);
-			caculatePoint.sub(slither.points[pointSearchIndex],true);
-
-			//delta = caculatePoint
-			caculatePoint.assign(caculatePointNormalize);
-			caculatePointNormalize.normalize(true);
-			var totalLen = caculatePoint.len();
-
-			if(trackedLen + totalLen >= drawLocationLen)
-			{
-				var offset = drawLocationLen - trackedLen;
-				slither.points[pointSearchIndex].assign(drawPt);
-				caculatePointNormalize.mul(offset,true);
-				drawPt.add(caculatePointNormalize,true);
-				drawLocationLen += radius / 2;
-				context.drawImage(img,drawPt.x,drawPt.y,radius * 2,radius * 2);
-			}
-			else
-			{
-				pointSearchIndex ++;
-				trackedLen += totalLen;
-				if(pointSearchIndex >= pts.length - 1)
-				{
-					context.drawImage(img,pts[pts.length - 1].x,pts[pts.length - 1].y,radius * 2,radius * 2);
-					return;
-				}
-			}
+			context.fillRect(slither.points[key].offX(),slither.points[key].offY(),10,10);
 		}
+
+		// while(1)
+		// {
+		// 	//context.fillStyle = "#330000";
+		// 	//context.fillRect(slither.points[pointSearchIndex].x,slither.points[pointSearchIndex].y,10,10);
+
+		// 	slither.points[pointSearchIndex + 1].assign(caculatePoint);
+		// 	caculatePoint.sub(slither.points[pointSearchIndex],true);
+
+		// 	//delta = caculatePoint
+		// 	caculatePoint.assign(caculatePointNormalize);
+		// 	caculatePointNormalize.normalize(true);
+		// 	var totalLen = caculatePoint.len();
+
+		// 	if(trackedLen + totalLen >= drawLocationLen)
+		// 	{
+		// 		var offset = drawLocationLen - trackedLen;
+		// 		slither.points[pointSearchIndex].assign(drawPt);
+		// 		caculatePointNormalize.mul(offset,true);
+		// 		drawPt.add(caculatePointNormalize,true);
+		// 		drawLocationLen += radius / 2;
+		// 		context.drawImage(img,drawPt.x,drawPt.y,radius * 2,radius * 2);
+		// 	}
+		// 	else
+		// 	{
+		// 		pointSearchIndex ++;
+		// 		trackedLen += totalLen;
+		// 		if(pointSearchIndex >= pts.length - 1)
+		// 		{
+		// 			context.drawImage(img,pts[pts.length - 1].x,pts[pts.length - 1].y,radius * 2,radius * 2);
+		// 			return;
+		// 		}
+		// 	}
+		// }
 	}
 }

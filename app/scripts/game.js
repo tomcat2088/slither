@@ -16,7 +16,7 @@ module.exports = function Game(gameRender)
 		if(self.slither)
 		{
 			var pt = self.slither.points[self.slither.points.length - 1];
-			return pt;
+			return {x:pt.offX(),y:pt.offY()};
 		}
 		return new Point(0,0);
 	}
@@ -98,8 +98,8 @@ module.exports = function Game(gameRender)
 		console.log('begin');
 		self.gameRender.isRunning = true;
 		self.updateHandler = setInterval(function(){
-			window.game.update(1000/30);
-		}, 1000/30);
+			window.game.update(1000);
+		}, 1000);
 	}
 
 	this.end = function()
@@ -116,7 +116,7 @@ module.exports = function Game(gameRender)
 			return;
 		if(self.updateCallback)
 			self.updateCallback(deltaTime);
-		self.slither.update(deltaTime);
+		//self.slither.update(deltaTime);
 
 		// for(var key in self.slitherAIs)
 		// {
@@ -130,23 +130,23 @@ module.exports = function Game(gameRender)
 		// 	}
 		// }
 
-		checkSlithersEatFood();
-		checkSlitherCollide();
+		//checkSlithersEatFood();
+		//checkSlitherCollide();
 
 
-		if(lastUpdatePointsTime <= 0)
-		{
-			self.server.syncSlither(self.slither.serialize());
-			lastUpdatePointsTime = 0.05;
-		}
-		else
-		{
-			self.server.syncSlitherExceptPoints(self.slither.serializeExceptPoints());
-		}
+		// if(lastUpdatePointsTime <= 0)
+		// {
+		// 	self.server.syncSlither(self.slither.serialize());
+		// 	lastUpdatePointsTime = 0.05;
+		// }
+		// else
+		// {
+		// 	self.server.syncSlitherExceptPoints(self.slither.serializeExceptPoints());
+		// }
 		lastUpdatePointsTime -= deltaTime;
 
 
-		checkSlitherEatFood(self.slither);
+		//checkSlitherEatFood(self.slither);
 
 	}
 

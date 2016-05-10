@@ -21,7 +21,7 @@ function Server(serverUrl,commandCallBack)
 	{
 		if(websocket)
 			return;
-		websocket = new Socket("ws://192.168.0.102:8081",'slither');//serverUrl
+		websocket = new Socket("ws://192.168.0.100:8081",'slither');//serverUrl
 		websocket.onmessage = function(e)
 		{
 			var obj = JSON.parse(e.data);
